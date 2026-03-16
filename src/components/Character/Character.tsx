@@ -14,7 +14,6 @@ export default function Character() {
   const containerRef = useRef<HTMLDivElement>(null)
   const gravityRef = useRef<number | null>(null)
   const homeYRef = useRef<number | null>(null)
-  // Track window position locally to avoid async IPC reads during animation
   const localPosRef = useRef<{ x: number; y: number } | null>(null)
 
   const expr = expressionMap[animationState]
@@ -25,7 +24,7 @@ export default function Character() {
     return () => clearInterval(interval)
   }, [decay])
 
-  // Store the "home" Y position (bottom of screen) on mount
+  // Store the "home" Y position on mount
   useEffect(() => {
     window.electronAPI?.getWindowPosition().then((pos) => {
       homeYRef.current = pos.y
@@ -33,7 +32,7 @@ export default function Character() {
     }).catch(() => {})
   }, [])
 
-  // Gravity: animate window back to home Y after drag — uses rAF + local position tracking
+  // Gravity: animate window back to home Y after drag
   const applyGravity = useCallback(() => {
     if (gravityRef.current !== null) return
     if (!window.electronAPI || !localPosRef.current) return
@@ -74,7 +73,6 @@ export default function Character() {
     gravityRef.current = requestAnimationFrame(tick)
   }, [])
 
-  // Cancel gravity on unmount
   useEffect(() => {
     return () => {
       if (gravityRef.current !== null) {
@@ -84,7 +82,7 @@ export default function Character() {
     }
   }, [])
 
-  // Drag handling — throttled with rAF, DOM overlay for event capture
+  // Drag handling
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return
 
@@ -94,28 +92,19 @@ export default function Character() {
       gravityRef.current = null
     }
 
-    // Add a full-window overlay to capture mouse events over transparent areas during drag.
-    // With transparent:true, pixels with alpha=0 normally pass through to the desktop.
-    // The overlay gives every pixel alpha>0 so the OS sends all events to our window.
-    const overlay = document.createElement('div')
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.02);cursor:grabbing'
-    document.body.appendChild(overlay)
-
+    // Calculate window position IMMEDIATELY from the event (no async IPC!)
+    // window position = screen coords - client coords
+    const winX = e.screenX - e.clientX
+    const winY = e.screenY - e.clientY
     const startX = e.screenX
     const startY = e.screenY
-    let winReady = false
-    let winX = 0
-    let winY = 0
     let moved = 0
     let rafId: number | null = null
     let pendingDx = 0
     let pendingDy = 0
 
-    window.electronAPI?.getWindowPosition().then((pos) => {
-      winX = pos.x
-      winY = pos.y
-      winReady = true
-    }).catch(() => { winReady = true })
+    // Enable mouse capture over transparent areas during drag
+    window.electronAPI?.setIgnoreCursorEvents(true, { forward: true })
 
     const flushMove = () => {
       rafId = null
@@ -126,11 +115,9 @@ export default function Character() {
     }
 
     const handleMove = (ev: MouseEvent) => {
-      if (!winReady) return
       pendingDx = ev.screenX - startX
       pendingDy = ev.screenY - startY
       moved = Math.abs(pendingDx) + Math.abs(pendingDy)
-      // Throttle to one IPC call per animation frame
       if (rafId === null) {
         rafId = requestAnimationFrame(flushMove)
       }
@@ -144,8 +131,8 @@ export default function Character() {
         flushMove()
       }
 
-      // Remove the overlay — restores transparent click-through
-      overlay.remove()
+      // Restore default transparent window click-through
+      window.electronAPI?.setIgnoreCursorEvents(false)
 
       if (moved < 5) {
         toggleChat()
@@ -170,8 +157,7 @@ export default function Character() {
       style={{
         width: IMG_WIDTH + 20,
         height: IMG_HEIGHT + 20,
-        // Background with enough alpha (>0) so the OS sends mouse events to this area.
-        // With transparent:true, alpha=0 passes through, alpha>0 captures events.
+        // Background alpha > 0 so transparent window captures clicks on this area
         background: 'rgba(0, 0, 0, 0.05)',
       }}
       onMouseDown={handleMouseDown}

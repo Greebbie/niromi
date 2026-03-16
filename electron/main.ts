@@ -75,6 +75,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      webSecurity: false, // Allow cross-origin API calls from renderer (Claude, OpenAI, etc.)
     },
   })
 

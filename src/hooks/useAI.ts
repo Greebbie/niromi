@@ -51,6 +51,7 @@ function createProvider(): AIProvider | null {
  * Get active window context with timeout. Returns empty string on failure.
  */
 async function getScreenContext(): Promise<string> {
+  if (!window.electronAPI) return ''
   try {
     const result = await Promise.race([
       window.electronAPI.getActiveWindow(),
@@ -68,7 +69,7 @@ async function getScreenContext(): Promise<string> {
  */
 async function getVisionContext(): Promise<string> {
   const { visionEnabled } = useConfigStore.getState()
-  if (!visionEnabled) return ''
+  if (!visionEnabled || !window.electronAPI) return ''
 
   try {
     const status = await window.electronAPI.visionStatus()

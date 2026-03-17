@@ -6,15 +6,11 @@ import miruPng from '@/assets/miru.png'
 
 const IMG_WIDTH = 140
 const IMG_HEIGHT = 180
-const GRAVITY = 2400 // px/s²
 
 export default function Character() {
   const { animationState, decay } = useCharacterStore()
   const { toggleChat } = useChatStore()
   const containerRef = useRef<HTMLDivElement>(null)
-  const gravityRef = useRef<number | null>(null)
-  const homeYRef = useRef<number | null>(null)
-  const localPosRef = useRef<{ x: number; y: number } | null>(null)
 
   const expr = expressionMap[animationState]
 
@@ -24,76 +20,12 @@ export default function Character() {
     return () => clearInterval(interval)
   }, [decay])
 
-  // Store the "home" Y position on mount
-  useEffect(() => {
-    window.electronAPI?.getWindowPosition().then((pos) => {
-      homeYRef.current = pos.y
-      localPosRef.current = { x: pos.x, y: pos.y }
-    }).catch(() => {})
-  }, [])
-
-  // Gravity: animate window back to home Y after drag
-  const applyGravity = useCallback(() => {
-    if (gravityRef.current !== null) return
-    if (!window.electronAPI || !localPosRef.current) return
-
-    let velocity = 0
-    let lastTime = performance.now()
-
-    const tick = (now: number) => {
-      const homeY = homeYRef.current
-      const pos = localPosRef.current
-      if (homeY === null || !pos) { gravityRef.current = null; return }
-
-      const dy = homeY - pos.y
-      if (Math.abs(dy) < 2 && Math.abs(velocity) < 10) {
-        pos.y = homeY
-        localPosRef.current = pos
-        window.electronAPI?.setWindowPosition(pos.x, homeY)
-        gravityRef.current = null
-        return
-      }
-
-      const dt = Math.min((now - lastTime) / 1000, 0.05)
-      lastTime = now
-      velocity += GRAVITY * dt
-      let newY = pos.y + velocity * dt
-
-      if (dy > 0 && newY > homeY) {
-        newY = homeY
-        velocity = 0
-      }
-
-      pos.y = Math.round(newY)
-      localPosRef.current = pos
-      window.electronAPI?.setWindowPosition(pos.x, pos.y)
-      gravityRef.current = requestAnimationFrame(tick)
-    }
-
-    gravityRef.current = requestAnimationFrame(tick)
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      if (gravityRef.current !== null) {
-        cancelAnimationFrame(gravityRef.current)
-        gravityRef.current = null
-      }
-    }
-  }, [])
-
-  // Drag handling
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  // Drag via Pointer Events + setPointerCapture — reliable on all platforms
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
     if (e.button !== 0) return
+    const el = e.currentTarget as HTMLElement
+    el.setPointerCapture(e.pointerId)
 
-    // Cancel any running gravity
-    if (gravityRef.current !== null) {
-      cancelAnimationFrame(gravityRef.current)
-      gravityRef.current = null
-    }
-
-    // Calculate window position IMMEDIATELY from the event (no async IPC!)
-    // window position = screen coords - client coords
     const winX = e.screenX - e.clientX
     const winY = e.screenY - e.clientY
     const startX = e.screenX
@@ -103,18 +35,12 @@ export default function Character() {
     let pendingDx = 0
     let pendingDy = 0
 
-    // Enable mouse capture over transparent areas during drag
-    window.electronAPI?.setIgnoreCursorEvents(true, { forward: true })
-
     const flushMove = () => {
       rafId = null
-      const newX = winX + pendingDx
-      const newY = winY + pendingDy
-      localPosRef.current = { x: newX, y: newY }
-      window.electronAPI?.setWindowPosition(newX, newY)
+      window.electronAPI?.setWindowPosition(winX + pendingDx, winY + pendingDy)
     }
 
-    const handleMove = (ev: MouseEvent) => {
+    const onMove = (ev: PointerEvent) => {
       pendingDx = ev.screenX - startX
       pendingDy = ev.screenY - startY
       moved = Math.abs(pendingDx) + Math.abs(pendingDy)
@@ -123,28 +49,23 @@ export default function Character() {
       }
     }
 
-    const handleUp = () => {
-      window.removeEventListener('mousemove', handleMove)
-      window.removeEventListener('mouseup', handleUp)
+    const onUp = () => {
+      el.removeEventListener('pointermove', onMove)
+      el.removeEventListener('pointerup', onUp)
+      el.removeEventListener('lostpointercapture', onUp)
       if (rafId !== null) {
         cancelAnimationFrame(rafId)
         flushMove()
       }
-
-      // Restore default transparent window click-through
-      window.electronAPI?.setIgnoreCursorEvents(false)
-
       if (moved < 5) {
         toggleChat()
-      } else {
-        localPosRef.current = { x: winX + pendingDx, y: winY + pendingDy }
-        applyGravity()
       }
     }
 
-    window.addEventListener('mousemove', handleMove)
-    window.addEventListener('mouseup', handleUp)
-  }, [toggleChat, applyGravity])
+    el.addEventListener('pointermove', onMove)
+    el.addEventListener('pointerup', onUp)
+    el.addEventListener('lostpointercapture', onUp)
+  }, [toggleChat])
 
   // Build dynamic glow shadow
   const glowShadow = `0 0 ${20 * expr.glowIntensity}px ${expr.glowColor}${Math.round(expr.glowIntensity * 255).toString(16).padStart(2, '0')},`
@@ -157,10 +78,10 @@ export default function Character() {
       style={{
         width: IMG_WIDTH + 20,
         height: IMG_HEIGHT + 20,
-        // Background alpha > 0 so transparent window captures clicks on this area
         background: 'rgba(0, 0, 0, 0.05)',
+        touchAction: 'none', // required for pointer capture
       }}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
     >
       <style>{KEYFRAMES}</style>
 

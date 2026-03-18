@@ -639,7 +639,10 @@ function captureWindowNative(windowName: string, maxW: number, maxH: number): Pr
       return reject(new Error(`Failed to write temp file: ${(e as Error).message}`))
     }
 
-    const psScript = `Add-Type -AssemblyName System.Drawing; Add-Type -Path '${tempFile.replace(/'/g, "''")}'; $r = [WinCapture]::Go('${sanitized}', ${maxW}, ${maxH}); Remove-Item '${tempFile.replace(/'/g, "''")}' -ErrorAction SilentlyContinue; Write-Output $r`
+    const escapedPath = tempFile.replace(/'/g, "''")
+    // Read source from file and compile with -TypeDefinition + -ReferencedAssemblies
+    // This avoids the issue where Add-Type -Path doesn't inherit loaded assemblies
+    const psScript = `$src = Get-Content -Raw '${escapedPath}'; Add-Type -TypeDefinition $src -ReferencedAssemblies System.Drawing -ErrorAction Stop; Remove-Item '${escapedPath}' -ErrorAction SilentlyContinue; $r = [WinCapture]::Go('${sanitized}', ${maxW}, ${maxH}); Write-Output $r`
 
     execFile('powershell', ['-NoProfile', '-Command', psScript], {
       timeout: 15000,

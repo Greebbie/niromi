@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useCharacterStore } from '@/stores/characterStore'
 import { useChatStore } from '@/stores/chatStore'
+import { useSkillConfigStore } from '@/stores/skillConfigStore'
 import { expressionMap } from './expressions'
 import miruPng from '@/assets/miru.png'
 import { playSound } from '@/core/sound'
@@ -21,6 +22,7 @@ function clamp(v: number, min: number, max: number) {
 export default function Character() {
   const { animationState, decay } = useCharacterStore()
   const { toggleChat } = useChatStore()
+  const hasActiveSkill = useSkillConfigStore((s) => s.hasAnyEnabled())
   const containerRef = useRef<HTMLDivElement>(null)
   const leftPupilRef = useRef<HTMLDivElement>(null)
   const rightPupilRef = useRef<HTMLDivElement>(null)
@@ -285,6 +287,29 @@ export default function Character() {
               />
             </>
           )}
+          {/* Duty indicator — shown when configurable skills are active */}
+          {hasActiveSkill && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 2,
+                right: 2,
+                width: 16,
+                height: 16,
+                borderRadius: '50%',
+                background: 'rgba(99, 102, 241, 0.8)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 10,
+                lineHeight: 1,
+                pointerEvents: 'none',
+                animation: 'miru-duty-pulse 2s ease-in-out infinite',
+              }}
+            >
+              🌙
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -305,5 +330,9 @@ const KEYFRAMES = `
   25% { transform: translateY(-1px) rotate(-0.5deg); }
   50% { transform: translateY(1px) rotate(0.3deg); }
   75% { transform: translateY(-0.5px) rotate(-0.2deg); }
+}
+@keyframes miru-duty-pulse {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
 }
 `

@@ -1,3 +1,4 @@
+import type React from 'react'
 import type { ToolResult } from '@/core/tools/registry'
 
 export interface SkillStep {
@@ -23,6 +24,12 @@ export interface SkillDefinition {
   execute?: (input: string) => Promise<void>
   steps?: SkillStep[]
   aiInvocable?: boolean
+  /** Skill has a configuration panel and can be toggled on/off */
+  configurable?: boolean
+  /** Default configuration values */
+  defaultConfig?: Record<string, unknown>
+  /** React component for skill configuration UI */
+  ConfigPanel?: React.ComponentType<{ config: Record<string, unknown>; onChange: (config: Record<string, unknown>) => void }>
 }
 
 class SkillRegistry {

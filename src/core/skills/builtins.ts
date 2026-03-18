@@ -1,6 +1,7 @@
 import { skillRegistry } from './registry'
 import { toolRegistry } from '@/core/tools'
 import { useChatStore } from '@/stores/chatStore'
+import { registerWeChatDelegateSkill } from './wechat-delegate'
 
 const toolCategoryMap: Record<string, 'files' | 'apps' | 'search' | 'create' | 'system' | 'custom'> = {
   list_files: 'files',
@@ -411,6 +412,9 @@ export function registerBuiltinSkills() {
       })
     },
   })
+
+  // Register configurable skills
+  registerWeChatDelegateSkill()
 
   // Initialize marketplace skills (load from ~/.miru/skills/)
   import('./loader').then(({ initMarketplaceSkills }) => {

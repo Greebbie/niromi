@@ -271,6 +271,27 @@ export const messages: Record<string, Record<string, string>> = {
     'ai.noApiKey': 'Miru 还没有配置 API Key 呢~ 去设置里填一下吧！',
     'ai.cancelled': '好的，已取消~',
 
+    // Skill Config
+    'skill.config.configurable': '可配置',
+    'skill.config.enabled': '已启用',
+    'skill.config.disabled': '已关闭',
+
+    // WeChat Delegate Skill
+    'skill.wechat.replyMode': '回复方式',
+    'skill.wechat.fixedTemplate': '固定模板',
+    'skill.wechat.replyTemplate': '回复模板',
+    'skill.wechat.fallbackTemplate': '备用模板（AI 失败时使用）',
+    'skill.wechat.templatePlaceholder': '我现在不在，稍后回复你',
+    'skill.wechat.idleMinutes': '空闲分钟后才回复',
+    'skill.wechat.maxReplies': '每人最多回复次数',
+    'skill.wechat.requireConfirm': '发送前需要确认',
+    'skill.wechat.sensitiveKeywords': '敏感词屏蔽',
+    'skill.wechat.sensitiveInstruction': 'AI 限制指令',
+    'skill.wechat.sensitiveInstructionPlaceholder': '不要讨论财务信息，不要透露个人联系方式和地址',
+    'skill.wechat.log': '运行日志',
+    'skill.wechat.clearLog': '清除',
+    'skill.wechat.noLogs': '暂无日志',
+
     // Slash Menu
     'slash.noMatch': '没有匹配的命令',
   },
@@ -545,6 +566,27 @@ export const messages: Record<string, Record<string, string>> = {
     // AI
     'ai.noApiKey': 'Miru doesn\'t have an API Key yet~ Go to Settings to add one!',
     'ai.cancelled': 'OK, cancelled~',
+
+    // Skill Config
+    'skill.config.configurable': 'Configurable',
+    'skill.config.enabled': 'Enabled',
+    'skill.config.disabled': 'Disabled',
+
+    // WeChat Delegate Skill
+    'skill.wechat.replyMode': 'Reply Mode',
+    'skill.wechat.fixedTemplate': 'Fixed Template',
+    'skill.wechat.replyTemplate': 'Reply Template',
+    'skill.wechat.fallbackTemplate': 'Fallback Template (used when AI fails)',
+    'skill.wechat.templatePlaceholder': 'I\'m away, will reply later',
+    'skill.wechat.idleMinutes': 'Reply after idle (min)',
+    'skill.wechat.maxReplies': 'Max replies per contact',
+    'skill.wechat.requireConfirm': 'Require confirmation before sending',
+    'skill.wechat.sensitiveKeywords': 'Sensitive Keywords',
+    'skill.wechat.sensitiveInstruction': 'AI Restriction',
+    'skill.wechat.sensitiveInstructionPlaceholder': 'Do not discuss financial info or share personal contact details',
+    'skill.wechat.log': 'Activity Log',
+    'skill.wechat.clearLog': 'Clear',
+    'skill.wechat.noLogs': 'No activity yet',
 
     // Slash Menu
     'slash.noMatch': 'No matching commands',

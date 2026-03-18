@@ -133,6 +133,22 @@ function handleWindowChanged(data: { app: string; title: string }) {
       }
     }
 
+    // Sensitive keyword filtering on window title
+    if (rule.sensitiveKeywords?.length) {
+      const sensitiveKw = rule.sensitiveKeywords.find(kw =>
+        data.title.toLowerCase().includes(kw.toLowerCase())
+      )
+      if (sensitiveKw) {
+        useAdminStore.getState().addDelegationLog({
+          timestamp: Date.now(),
+          app: rule.app,
+          action: 'skipped_sensitive',
+          sensitiveKeyword: sensitiveKw,
+        })
+        continue
+      }
+    }
+
     // Idle check
     if (rule.idleMinutes && (Date.now() - lastUserInput) < rule.idleMinutes * 60000) continue
 
@@ -151,6 +167,12 @@ function handleWindowChanged(data: { app: string; title: string }) {
         onConfirm: async () => {
           useChatStore.getState().setPendingConfirm(null)
           await sendAutoReply(data.app, reply)
+          useAdminStore.getState().addDelegationLog({
+            timestamp: Date.now(),
+            app: data.app,
+            action: 'replied',
+            replySent: reply,
+          })
         },
         onCancel: () => {
           useChatStore.getState().setPendingConfirm(null)
@@ -160,6 +182,12 @@ function handleWindowChanged(data: { app: string; title: string }) {
       chatStore.openChat()
     } else {
       sendAutoReply(data.app, reply)
+      useAdminStore.getState().addDelegationLog({
+        timestamp: Date.now(),
+        app: data.app,
+        action: 'replied',
+        replySent: reply,
+      })
     }
   }
 }

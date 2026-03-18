@@ -40,6 +40,21 @@ interface AutoReplyRule {
   useAI: boolean
   idleMinutes?: number
   requireConfirm: boolean
+  sensitiveKeywords?: string[]
+  sensitiveInstruction?: string
+  maxRepliesPerContact?: number
+  /** Which skill created this rule (for skill-managed rules) */
+  sourceSkill?: string
+}
+
+interface DelegationLogEntry {
+  id: number
+  timestamp: number
+  app: string
+  action: 'replied' | 'skipped_sensitive' | 'skipped_cooldown' | 'skipped_max_replies'
+  contact?: string
+  replySent?: string
+  sensitiveKeyword?: string
 }
 
 interface AuditEntry {
@@ -57,6 +72,7 @@ interface AdminState {
   monitorRules: MonitorRule[]
   autoReplyRules: AutoReplyRule[]
   auditLog: AuditEntry[]
+  delegationLog: DelegationLogEntry[]
   isAdminOpen: boolean
 
   init: () => void
@@ -83,6 +99,11 @@ interface AdminState {
   addAuditEntry: (entry: Omit<AuditEntry, 'id'>) => void
   getAuditLog: (filter?: { toolName?: string; success?: boolean; limit?: number }) => AuditEntry[]
   clearAuditLog: () => void
+
+  // Delegation log
+  addDelegationLog: (entry: Omit<DelegationLogEntry, 'id'>) => void
+  getDelegationLog: (app?: string, limit?: number) => DelegationLogEntry[]
+  clearDelegationLog: () => void
 }
 
 function generateId(): string {
@@ -110,6 +131,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   monitorRules: [],
   autoReplyRules: [],
   auditLog: [],
+  delegationLog: [],
   isAdminOpen: false,
 
   init: async () => {
@@ -121,12 +143,14 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       } | undefined
 
       const audit = await window.electronAPI?.storeGet('admin-audit') as AuditEntry[] | undefined
+      const delegLog = await window.electronAPI?.storeGet('delegation-log') as DelegationLogEntry[] | undefined
 
       set({
         permissions: config?.permissions ?? [],
         monitorRules: config?.monitorRules ?? [],
         autoReplyRules: config?.autoReplyRules ?? [],
         auditLog: audit ?? [],
+        delegationLog: delegLog ?? [],
       })
     } catch {
       // Silent fail, use defaults
@@ -308,6 +332,27 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     persistAudit([])
     set({ auditLog: [] })
   },
+
+  // Delegation log
+  addDelegationLog: (entry) => {
+    set((state) => {
+      const newEntry: DelegationLogEntry = { ...entry, id: Date.now() }
+      const newLog = [...state.delegationLog, newEntry].slice(-200)
+      window.electronAPI?.storeSet('delegation-log', newLog)
+      return { delegationLog: newLog }
+    })
+  },
+
+  getDelegationLog: (app?, limit = 50) => {
+    let log = get().delegationLog
+    if (app) log = log.filter((e) => e.app === app)
+    return log.slice(-limit)
+  },
+
+  clearDelegationLog: () => {
+    window.electronAPI?.storeSet('delegation-log', [])
+    set({ delegationLog: [] })
+  },
 }))
 
-export type { ToolPermission, MonitorRule, AutoReplyRule, AuditEntry, AdminState }
+export type { ToolPermission, MonitorRule, AutoReplyRule, AuditEntry, DelegationLogEntry, AdminState }

@@ -20,6 +20,8 @@ import { t } from '@/i18n/useI18n'
 let intervalId: ReturnType<typeof setInterval> | null = null
 const lastScreenshots = new Map<string, string>()
 const ruleCooldowns = new Map<string, number>()
+/** Track reply counts per contact per rule */
+const replyCounters = new Map<string, number>()
 
 export function isVisionMonitorRunning(): boolean {
   return intervalId !== null
@@ -47,6 +49,7 @@ export function stopVisionMonitor(): void {
     intervalId = null
     lastScreenshots.clear()
     ruleCooldowns.clear()
+    replyCounters.clear()
   }
 }
 
@@ -169,23 +172,67 @@ async function pollVision() {
           const ruleWin = r.app || '__fullscreen__'
           return ruleWin === windowName
         })
+        const adminStore = useAdminStore.getState()
         for (const rule of matchingARRules) {
-          if (!checkCooldown(`ar_${rule.id}`, 30000)) continue
+          if (!checkCooldown(`ar_${rule.id}`, 30000)) {
+            adminStore.addDelegationLog({
+              timestamp: Date.now(),
+              app: rule.app,
+              action: 'skipped_cooldown',
+            })
+            continue
+          }
 
           const keywords = rule.triggerKeywords || []
           const matched = keywords.some(kw => contentDescription.toLowerCase().includes(kw.toLowerCase()))
           if (!matched) continue
 
+          // Layer 1: Sensitive keyword filtering
+          const sensitiveKw = rule.sensitiveKeywords?.find(kw =>
+            contentDescription.toLowerCase().includes(kw.toLowerCase())
+          )
+          if (sensitiveKw) {
+            adminStore.addDelegationLog({
+              timestamp: Date.now(),
+              app: rule.app,
+              action: 'skipped_sensitive',
+              sensitiveKeyword: sensitiveKw,
+            })
+            continue
+          }
+
+          // Max replies per contact check
+          if (rule.maxRepliesPerContact) {
+            const counterKey = `${rule.id}_${windowName}`
+            const count = replyCounters.get(counterKey) || 0
+            if (count >= rule.maxRepliesPerContact) {
+              adminStore.addDelegationLog({
+                timestamp: Date.now(),
+                app: rule.app,
+                action: 'skipped_max_replies',
+              })
+              continue
+            }
+            replyCounters.set(counterKey, count + 1)
+          }
+
           ruleCooldowns.set(`ar_${rule.id}`, Date.now())
 
           let reply: string
           if (rule.useAI) {
-            reply = await generateAIReply(contentDescription)
+            // Layer 2: AI instruction injection for sensitive topics
+            reply = await generateAIReply(contentDescription, rule.sensitiveInstruction)
           } else {
             reply = rule.replyTemplate || t('monitor.autoReplyDefault')
           }
 
           await sendAutoReply(rule.app, reply)
+          adminStore.addDelegationLog({
+            timestamp: Date.now(),
+            app: rule.app,
+            action: 'replied',
+            replySent: reply,
+          })
         }
       }
     } catch {
@@ -275,15 +322,20 @@ async function executeVisionAction(
   }
 }
 
-async function generateAIReply(context: string): Promise<string> {
+async function generateAIReply(context: string, sensitiveInstruction?: string): Promise<string> {
   const fallback = t('monitor.autoReplyDefault')
   try {
     const provider = createProvider()
     if (!provider) return fallback
 
+    let systemPrompt = t('monitor.aiSystemPrompt')
+    if (sensitiveInstruction) {
+      systemPrompt += `\n\n重要：${sensitiveInstruction}`
+    }
+
     let reply = ''
     for await (const chunk of provider.streamChat([
-      { role: 'system', content: t('monitor.aiSystemPrompt') },
+      { role: 'system', content: systemPrompt },
       { role: 'user', content: t('monitor.aiUserPrompt').replace('{context}', context.slice(0, 500)) },
     ])) {
       if (chunk.type === 'text') reply += chunk.text

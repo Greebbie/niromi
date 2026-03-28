@@ -43,7 +43,7 @@ export default function CostBadge() {
           <div
             className="absolute left-0 top-full mt-1 z-50 rounded-lg p-2.5 min-w-[160px]"
             style={{
-              background: 'rgba(20, 20, 30, 0.98)',
+              background: 'var(--bg-primary)',
               border: '1px solid rgba(255,255,255,0.1)',
             }}
           >

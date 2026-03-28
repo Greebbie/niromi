@@ -74,9 +74,9 @@ export default function ContextMenu({
       style={{
         left: x,
         top: y,
-        background: 'rgba(30, 30, 40, 0.98)',
-        border: '1px solid rgba(255, 255, 255, 0.12)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+        background: 'var(--bg-primary)',
+        border: '1px solid var(--border-default)',
+        boxShadow: 'var(--shadow-panel)',
       }}
     >
       {/* Quick actions */}

@@ -13,16 +13,17 @@ export default function InputBar() {
   const { isStreaming } = useChatStore()
   const { sendMessage, abort } = useAI()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const sendMessageRef = useRef(sendMessage)
+  sendMessageRef.current = sendMessage
   const { t } = useI18n()
 
   const pendingPrompt = useChatStore((s) => s.pendingPrompt)
   useEffect(() => {
     if (!pendingPrompt) return
-    // Clear immediately to prevent re-firing on sendMessage reference change
     const prompt = pendingPrompt
     useChatStore.getState().setPendingPrompt(null)
-    sendMessage(prompt)
-  }, [pendingPrompt]) // eslint-disable-line react-hooks/exhaustive-deps
+    sendMessageRef.current(prompt)
+  }, [pendingPrompt])
 
   const handleVoiceResult = useCallback(
     (text: string) => {
@@ -73,7 +74,7 @@ export default function InputBar() {
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value
     setInput(val)
-    setShowSlash(val.startsWith('/'))
+    setShowSlash(val === '/' || (val.startsWith('/') && !val.includes('://')))
     const el = e.target
     el.style.height = 'auto'
     el.style.height = Math.min(el.scrollHeight, 80) + 'px'
@@ -109,7 +110,7 @@ export default function InputBar() {
         placeholder={isStreaming ? t('chat.thinking') : t('chat.placeholder')}
         disabled={isStreaming}
         rows={1}
-        className="flex-1 bg-white/10 text-white text-sm rounded-lg px-3 py-2 resize-none outline-none placeholder:text-white/30 disabled:opacity-50"
+        className="flex-1 bg-white/10 text-white text-sm rounded-lg px-3 py-2 resize-none outline-none placeholder:text-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
         style={{ maxHeight: 80 }}
       />
       {/* Voice button — always available (local Whisper) */}

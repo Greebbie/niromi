@@ -5,7 +5,7 @@ const errorMessages: Record<string, { zh: string; en: string }> = {
   'not-allowed': { zh: '麦克风权限被拒绝', en: 'Microphone permission denied' },
   'no-speech': { zh: '没有检测到语音', en: 'No speech detected' },
   'audio-capture': { zh: '未找到麦克风', en: 'No microphone found' },
-  'not-downloaded': { zh: '请先在设置里下载语音模型', en: 'Download voice model in Settings first' },
+  'download-failed': { zh: '语音模型下载失败', en: 'Voice model download failed' },
   'init-failed': { zh: '语音模型加载失败', en: 'Voice model failed to load' },
   'transcribe-failed': { zh: '语音识别失败', en: 'Transcription failed' },
 }
@@ -21,22 +21,23 @@ function getErrorMsg(key: string): string {
  * Convert audio Blob (WebM/opus) to 16kHz mono Float32Array for Whisper.
  */
 async function blobToFloat32(blob: Blob): Promise<Float32Array> {
-  const arrayBuffer = await blob.arrayBuffer()
   const audioCtx = new AudioContext({ sampleRate: 16000 })
-  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
-  const mono = audioBuffer.getChannelData(0) // First channel, already 16kHz
-  // Copy data — AudioBuffer's internal array may be GC'd after context close
-  const copy = new Float32Array(mono.length)
-  copy.set(mono)
-  await audioCtx.close()
-  return copy
+  try {
+    const audioBuffer = await audioCtx.decodeAudioData(await blob.arrayBuffer())
+    const mono = audioBuffer.getChannelData(0)
+    const copy = new Float32Array(mono.length)
+    copy.set(mono)
+    return copy
+  } finally {
+    await audioCtx.close()
+  }
 }
 
 export function useVoiceInput(onResult: (text: string) => void) {
   const [isListening, setIsListening] = useState(false)
-  const [isInitializing] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [downloadProgress] = useState<{ status: string; progress?: number } | null>(null)
+  const [downloadProgress, setDownloadProgress] = useState<{ status: string; progress?: number } | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -45,7 +46,11 @@ export function useVoiceInput(onResult: (text: string) => void) {
   useEffect(() => {
     return () => {
       if (errorTimerRef.current) clearTimeout(errorTimerRef.current)
-      // Cleanup media stream on unmount
+      // Stop MediaRecorder if still active on unmount
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop()
+      }
+      mediaRecorderRef.current = null
       streamRef.current?.getTracks().forEach((t) => t.stop())
     }
   }, [])
@@ -57,26 +62,58 @@ export function useVoiceInput(onResult: (text: string) => void) {
     errorTimerRef.current = setTimeout(() => setError(null), 5000)
   }, [])
 
+  /** Check if STT is ready; if not, auto-download with progress feedback */
   const ensureSTTReady = useCallback(async (): Promise<boolean> => {
     const api = window.electronAPI
     if (!api) return false
 
-    const status = await api.sttStatus()
-    if (status.initialized) return true
+    try {
+      const status = await api.sttStatus()
+      if (status.initialized) return true
+    } catch {
+      // Status check failed, try init anyway
+    }
 
-    // Model not downloaded — don't auto-download, direct user to Settings
-    showError('not-downloaded')
-    return false
+    // Not ready — auto-download with progress
+    setIsInitializing(true)
+    setDownloadProgress({ status: 'downloading', progress: 0 })
+
+    const cleanup = () => {
+      setIsInitializing(false)
+      setDownloadProgress(null)
+      api.offSttProgress()
+    }
+
+    api.onSttProgress((p) => {
+      setDownloadProgress({
+        status: p.status,
+        progress: p.progress != null ? Math.round(p.progress) : undefined,
+      })
+    })
+
+    try {
+      const model = useConfigStore.getState().sttModel
+      const result = await api.sttInit(model)
+      cleanup()
+
+      if (!result.success) {
+        showError('download-failed', result.error)
+        return false
+      }
+      return true
+    } catch (err) {
+      cleanup()
+      showError('download-failed', err instanceof Error ? err.message : undefined)
+      return false
+    }
   }, [showError])
 
   const start = useCallback(async () => {
     setError(null)
 
-    // Ensure Whisper model is loaded
     const ready = await ensureSTTReady()
     if (!ready) return
 
-    // Get microphone access
     let stream: MediaStream
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -101,7 +138,6 @@ export function useVoiceInput(onResult: (text: string) => void) {
     }
 
     mediaRecorder.onstop = async () => {
-      // Stop all mic tracks
       stream.getTracks().forEach((t) => t.stop())
       streamRef.current = null
 
@@ -109,19 +145,19 @@ export function useVoiceInput(onResult: (text: string) => void) {
       chunksRef.current = []
 
       if (blob.size < 1000) {
-        // Too short, likely no speech
         showError('no-speech')
         return
       }
 
       try {
+        const api = window.electronAPI
+        if (!api) { showError('transcribe-failed'); return }
         const float32 = await blobToFloat32(blob)
         const sttLang = useConfigStore.getState().sttLanguage
         const mainLang = useConfigStore.getState().language
-        // auto → follow main language setting; explicit choice → use that
         const effectiveLang = sttLang === 'auto' ? mainLang : sttLang
         const whisperLang = effectiveLang === 'en' ? 'english' : effectiveLang === 'zh' ? 'chinese' : undefined
-        const result = await window.electronAPI.sttTranscribe(float32, whisperLang)
+        const result = await api.sttTranscribe(float32, whisperLang)
 
         if (result.error) {
           showError('transcribe-failed')

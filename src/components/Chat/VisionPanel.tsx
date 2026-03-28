@@ -40,9 +40,9 @@ const VisionPanel = forwardRef<HTMLDivElement, VisionPanelProps>(
       top: rect.bottom + 4,
       right: window.innerWidth - rect.right,
       width: 208,
-      background: 'rgba(30, 30, 40, 0.98)',
-      border: '1px solid rgba(255, 255, 255, 0.15)',
-      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+      background: 'var(--bg-primary)',
+      border: '1px solid var(--border-default)',
+      boxShadow: 'var(--shadow-panel)',
       borderRadius: 8,
       zIndex: 10000,
     }

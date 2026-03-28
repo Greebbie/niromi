@@ -255,7 +255,7 @@ export default function AdminMonitor() {
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="My rule..."
-                className="admin-input"
+                className="nr-input"
               />
             </div>
             <div>
@@ -263,7 +263,7 @@ export default function AdminMonitor() {
               <select
                 value={form.triggerType}
                 onChange={(e) => setForm({ ...form, triggerType: e.target.value as TriggerType })}
-                className="admin-input"
+                className="nr-select"
               >
                 {TRIGGER_TYPES.map((tt) => (
                   <option key={tt.id} value={tt.id}>{tt.label}</option>
@@ -280,7 +280,7 @@ export default function AdminMonitor() {
                 <select
                   value={form.targetWindow}
                   onChange={(e) => setForm({ ...form, targetWindow: e.target.value })}
-                  className="admin-input flex-1"
+                  className="nr-select flex-1"
                 >
                   <option value="">{t('admin.monitor.noWindows')}</option>
                   {windowList.map((w) => (
@@ -303,7 +303,7 @@ export default function AdminMonitor() {
                 value={form.app}
                 onChange={(e) => setForm({ ...form, app: e.target.value })}
                 placeholder="WeChat, Discord..."
-                className="admin-input"
+                className="nr-input"
               />
             </div>
           )}
@@ -315,7 +315,7 @@ export default function AdminMonitor() {
                 value={form.pattern}
                 onChange={(e) => setForm({ ...form, pattern: e.target.value })}
                 placeholder={isContentChange ? '.*  or  keyword|regex' : 'regex or keyword...'}
-                className="admin-input"
+                className="nr-input"
               />
             </div>
             <div>
@@ -323,7 +323,7 @@ export default function AdminMonitor() {
               <select
                 value={form.actionType}
                 onChange={(e) => setForm({ ...form, actionType: e.target.value as ActionType })}
-                className="admin-input"
+                className="nr-select"
               >
                 {ACTION_TYPES.map((at) => (
                   <option key={at.id} value={at.id}>{at.label}</option>
@@ -339,7 +339,7 @@ export default function AdminMonitor() {
                 value={form.payload}
                 onChange={(e) => setForm({ ...form, payload: e.target.value })}
                 placeholder={isSendKeys ? t('admin.monitor.payloadHintKeys') : 'Message or tool name...'}
-                className="admin-input"
+                className="nr-input"
               />
             </div>
             <div>
@@ -348,7 +348,7 @@ export default function AdminMonitor() {
                 type="number"
                 value={form.cooldownMs}
                 onChange={(e) => setForm({ ...form, cooldownMs: parseInt(e.target.value) || 0 })}
-                className="admin-input"
+                className="nr-input"
               />
             </div>
           </div>
@@ -361,7 +361,7 @@ export default function AdminMonitor() {
                 type="number"
                 value={form.visionIntervalMs}
                 onChange={(e) => setForm({ ...form, visionIntervalMs: parseInt(e.target.value) || 10000 })}
-                className="admin-input w-40"
+                className="nr-input w-40"
                 min={5000}
                 step={1000}
               />
@@ -392,25 +392,6 @@ export default function AdminMonitor() {
         </button>
       )}
 
-      <style>{`
-        .admin-input {
-          width: 100%;
-          background: rgba(255,255,255,0.05);
-          color: rgba(255,255,255,0.7);
-          font-size: 0.75rem;
-          border-radius: 0.375rem;
-          padding: 0.375rem 0.5rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          outline: none;
-        }
-        .admin-input:focus {
-          border-color: rgba(96,165,250,0.5);
-        }
-        .admin-input option {
-          background: #1e1e28;
-          color: rgba(255,255,255,0.8);
-        }
-      `}</style>
     </div>
   )
 }

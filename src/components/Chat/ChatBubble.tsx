@@ -60,9 +60,9 @@ export default function ChatBubble({ onOpenSettings, onOpenAdmin }: ChatBubblePr
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className="w-[350px] max-h-[400px] rounded-2xl overflow-hidden flex flex-col"
             style={{
-              background: 'rgba(30, 30, 40, 0.95)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-default)',
+              boxShadow: 'var(--shadow-panel)',
             }}
           >
             {/* Header bar */}

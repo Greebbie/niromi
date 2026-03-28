@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useConfigStore, type AIProviderType } from '@/stores/configStore'
 import { useChatStore } from '@/stores/chatStore'
@@ -37,9 +37,16 @@ export default function Welcome() {
   const [groupId, setGroupId] = useState('')
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null)
+  const stepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { setProvider, setApiKey: saveKey, setBaseUrl: saveBaseUrl, setGroupId: saveGroupId, setOnboarded, setLanguage } = useConfigStore()
   const { setPendingPrompt, openChat } = useChatStore()
   const { t, lang } = useI18n()
+
+  useEffect(() => {
+    return () => {
+      if (stepTimerRef.current) clearTimeout(stepTimerRef.current)
+    }
+  }, [])
 
   const providerInfo = PROVIDERS.find((p) => p.id === selectedProvider)!
 
@@ -80,7 +87,7 @@ export default function Welcome() {
     if (providerInfo.needsBaseUrl) saveBaseUrl(baseUrl || providerInfo.defaultBaseUrl || '')
     if (providerInfo.needsGroupId) saveGroupId(groupId)
 
-    setTimeout(() => setStep('features'), 600)
+    stepTimerRef.current = setTimeout(() => setStep('features'), 600)
     setTesting(false)
   }
 
@@ -97,8 +104,8 @@ export default function Welcome() {
       <motion.div
         className="w-[340px] rounded-2xl p-6 relative"
         style={{
-          background: 'rgba(30, 30, 40, 0.98)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--border-default)',
         }}
       >
         <AnimatePresence mode="wait">
@@ -312,22 +319,6 @@ function StepContainer({ children }: { children: React.ReactNode }) {
       transition={{ duration: 0.2 }}
     >
       {children}
-      <style>{`
-        .btn-primary {
-          background: rgba(59, 130, 246, 0.8);
-          color: white;
-          font-size: 0.875rem;
-          font-weight: 500;
-          padding: 0.5rem 1rem;
-          border-radius: 0.75rem;
-          border: none;
-          cursor: pointer;
-          transition: background 0.2s;
-        }
-        .btn-primary:hover {
-          background: rgba(59, 130, 246, 1);
-        }
-      `}</style>
     </motion.div>
   )
 }

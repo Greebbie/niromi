@@ -42,9 +42,9 @@ export default function AdminPanel() {
         transition={{ duration: 0.25, ease: 'easeOut' }}
         className="w-[680px] max-h-[600px] rounded-2xl overflow-hidden flex flex-col"
         style={{
-          background: 'rgba(30, 30, 40, 0.98)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          background: 'var(--bg-primary)',
+          border: '1px solid var(--border-default)',
+          boxShadow: 'var(--shadow-panel)',
         }}
       >
         {/* Header */}

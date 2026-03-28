@@ -33,8 +33,8 @@ export default function StatusPillBar({ onOpenAdmin, onOpenQuickActions }: Statu
             onClick={() => handleClick(pill.targetPanel)}
             className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white/70 hover:text-white/90 transition-colors select-none cursor-pointer"
             style={{
-              background: 'rgba(30, 30, 45, 0.85)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              background: 'var(--bg-primary)',
+              border: '1px solid var(--border-default)',
             }}
           >
             <span className="relative flex h-1.5 w-1.5">

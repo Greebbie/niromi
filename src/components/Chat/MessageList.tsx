@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
 import { useChatStore } from '@/stores/chatStore'
 import { useConfigStore } from '@/stores/configStore'
-import { useAI } from '@/hooks/useAI'
+
 import { speakText, stopSpeaking } from '@/core/tts'
 import { toolRegistry } from '@/core/tools'
 import { useI18n } from '@/i18n/useI18n'
@@ -27,20 +27,27 @@ function CopyButton({ text }: { text: string }) {
 
 function SpeakButton({ text }: { text: string }) {
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const checkRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const { t } = useI18n()
+
+  useEffect(() => {
+    return () => {
+      if (checkRef.current) clearInterval(checkRef.current)
+    }
+  }, [])
 
   const handleClick = useCallback(() => {
     if (isSpeaking) {
       stopSpeaking()
       setIsSpeaking(false)
+      if (checkRef.current) { clearInterval(checkRef.current); checkRef.current = null }
     } else {
       speakText(text)
       setIsSpeaking(true)
-      // Auto-reset when speech ends
-      const check = setInterval(() => {
+      checkRef.current = setInterval(() => {
         if (!window.speechSynthesis.speaking) {
           setIsSpeaking(false)
-          clearInterval(check)
+          if (checkRef.current) { clearInterval(checkRef.current); checkRef.current = null }
         }
       }, 200)
     }
@@ -82,7 +89,7 @@ const markdownComponents: Components = {
       )
     }
     return (
-      <code className="bg-white/20 rounded px-1 font-mono text-xs">{children}</code>
+      <code className="bg-white/20 rounded px-3 py-2 font-mono text-xs">{children}</code>
     )
   },
   pre: ({ children }) => <>{children}</>,
@@ -108,9 +115,8 @@ interface MessageListProps {
 }
 
 export default function MessageList({ onOpenAdmin }: MessageListProps) {
-  const { messages, isStreaming, pendingPrompt, setPendingPrompt } = useChatStore()
+  const { messages, isStreaming } = useChatStore()
   const ttsEnabled = useConfigStore((s) => s.ttsEnabled)
-  const { sendMessage } = useAI()
   const bottomRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const isNearBottomRef = useRef(true)
@@ -162,7 +168,7 @@ export default function MessageList({ onOpenAdmin }: MessageListProps) {
   const handleScroll = useCallback(() => {
     const el = scrollContainerRef.current
     if (!el) return
-    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100
+    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < el.clientHeight * 0.15
   }, [])
 
   // Auto-scroll to bottom only when user is near bottom
@@ -171,14 +177,6 @@ export default function MessageList({ onOpenAdmin }: MessageListProps) {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages])
-
-  // Consume pendingPrompt from context menu
-  useEffect(() => {
-    if (pendingPrompt) {
-      sendMessage(pendingPrompt)
-      setPendingPrompt(null)
-    }
-  }, [pendingPrompt, sendMessage, setPendingPrompt])
 
   const [showAll, setShowAll] = useState(false)
   const INITIAL_LIMIT = 15
@@ -215,7 +213,7 @@ export default function MessageList({ onOpenAdmin }: MessageListProps) {
                         if ('action' in a && a.action === 'openAdmin') {
                           onOpenAdmin?.()
                         } else if ('prompt' in a && a.prompt) {
-                          sendMessage(a.prompt)
+                          useChatStore.getState().setPendingPrompt(a.prompt)
                         }
                       }}
                       className="px-2 py-1 rounded-lg bg-white/8 hover:bg-white/15 text-white/60 hover:text-white/90 text-[11px] transition-colors"

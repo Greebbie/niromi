@@ -84,9 +84,9 @@ export default function CommandPalette({ onClose }: CommandPaletteProps) {
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
         className="w-[340px] max-h-[360px] rounded-xl overflow-hidden flex flex-col"
         style={{
-          background: 'rgba(30, 30, 40, 0.98)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5)',
+          background: 'var(--bg-primary)',
+          border: '1px solid var(--border-default)',
+          boxShadow: 'var(--shadow-panel)',
         }}
         onClick={(e) => e.stopPropagation()}
       >

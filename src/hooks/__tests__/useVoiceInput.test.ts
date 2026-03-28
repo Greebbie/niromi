@@ -35,7 +35,8 @@ describe('useVoiceInput', () => {
       expect(window.electronAPI.sttInit).not.toHaveBeenCalled()
     })
 
-    it('shows not-downloaded error and returns false when STT not initialized', async () => {
+    it('shows error and stays idle when auto-download fails', async () => {
+      ;(window.electronAPI.sttInit as ReturnType<typeof vi.fn>).mockResolvedValue({ success: false, error: 'network' })
       const { result } = renderHook(() => useVoiceInput(onResult))
 
       await act(async () => {
@@ -43,20 +44,22 @@ describe('useVoiceInput', () => {
       })
 
       expect(window.electronAPI.sttStatus).toHaveBeenCalled()
-      expect(window.electronAPI.sttInit).not.toHaveBeenCalled()
-      expect(result.current.error).toContain('请先在设置里下载语音模型')
+      expect(window.electronAPI.sttInit).toHaveBeenCalled()
       expect(result.current.isListening).toBe(false)
+      expect(result.current.error).toBeTruthy()
     })
 
-    it('shows not-downloaded error message (does not auto-init)', async () => {
+    it('auto-downloads model when not initialized', async () => {
+      ;(window.electronAPI.sttInit as ReturnType<typeof vi.fn>).mockResolvedValue({ success: true })
       const { result } = renderHook(() => useVoiceInput(onResult))
 
       await act(async () => {
         result.current.toggle()
       })
 
-      expect(result.current.error).toContain('请先在设置里下载语音模型')
-      expect(result.current.isListening).toBe(false)
+      expect(window.electronAPI.sttInit).toHaveBeenCalled()
+      // After successful download, should proceed to recording
+      expect(result.current.isListening).toBe(true)
     })
   })
 
@@ -132,8 +135,9 @@ describe('useVoiceInput', () => {
       }
     })
 
-    it('renders English not-downloaded error when language is en and STT not initialized', async () => {
+    it('renders English download-failed error when language is en and STT init fails', async () => {
       useConfigStore.setState({ language: 'en' })
+      ;(window.electronAPI.sttInit as ReturnType<typeof vi.fn>).mockResolvedValue({ success: false, error: 'network error' })
 
       const { result } = renderHook(() => useVoiceInput(onResult))
 
@@ -141,7 +145,7 @@ describe('useVoiceInput', () => {
         result.current.toggle()
       })
 
-      expect(result.current.error).toContain('Download voice model in Settings first')
+      expect(result.current.error).toContain('download failed')
     })
 
     it('renders not-allowed error when microphone permission denied', async () => {
@@ -161,17 +165,20 @@ describe('useVoiceInput', () => {
   })
 
   describe('downloadProgress', () => {
-    it('downloadProgress is always null (hook no longer manages download)', async () => {
+    it('downloadProgress is null initially', () => {
       const { result } = renderHook(() => useVoiceInput(onResult))
-
-      // downloadProgress is a static null in the hook (no setter)
       expect(result.current.downloadProgress).toBeNull()
+    })
+
+    it('downloadProgress resets to null after successful download', async () => {
+      ;(window.electronAPI.sttInit as ReturnType<typeof vi.fn>).mockResolvedValue({ success: true })
+      const { result } = renderHook(() => useVoiceInput(onResult))
 
       await act(async () => {
         result.current.toggle()
       })
 
-      // Still null after toggle
+      // After download completes, progress resets
       expect(result.current.downloadProgress).toBeNull()
     })
   })

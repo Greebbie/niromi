@@ -56,7 +56,7 @@ export default function AdminLogs() {
         <select
           value={filterTool}
           onChange={(e) => setFilterTool(e.target.value)}
-          className="log-select"
+          className="nr-select"
         >
           <option value="">{t('admin.logs.allTools')}</option>
           {toolNames.map((name) => (
@@ -67,7 +67,7 @@ export default function AdminLogs() {
         <select
           value={filterSuccess}
           onChange={(e) => setFilterSuccess(e.target.value as '' | 'true' | 'false')}
-          className="log-select"
+          className="nr-select"
         >
           <option value="">{t('admin.logs.allResults')}</option>
           <option value="true">{t('admin.logs.success')}</option>
@@ -87,7 +87,7 @@ export default function AdminLogs() {
       </div>
 
       {/* Table header */}
-      <div className="grid grid-cols-[100px_90px_1fr_1fr_60px] gap-2 px-3 py-1.5 text-white/30 text-xs border-b border-white/5">
+      <div className="grid grid-cols-[100px_90px_1fr_1fr_60px] gap-2 px-3 py-1.5 text-white/30 text-xs border-b border-white/5 sticky top-0 z-10" style={{ background: 'var(--bg-secondary)' }}>
         <span>{t('admin.logs.time')}</span>
         <span>{t('admin.logs.tool')}</span>
         <span>{t('admin.logs.params')}</span>
@@ -109,24 +109,6 @@ export default function AdminLogs() {
         )}
       </div>
 
-      <style>{`
-        .log-select {
-          background: rgba(255,255,255,0.05);
-          color: rgba(255,255,255,0.6);
-          font-size: 0.75rem;
-          border-radius: 0.375rem;
-          padding: 0.25rem 0.5rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          outline: none;
-        }
-        .log-select:focus {
-          border-color: rgba(96,165,250,0.5);
-        }
-        .log-select option {
-          background: #1e1e28;
-          color: rgba(255,255,255,0.8);
-        }
-      `}</style>
     </div>
   )
 }

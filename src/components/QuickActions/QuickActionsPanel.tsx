@@ -30,10 +30,11 @@ export default function QuickActionsPanel({ onClose, onOpenAdmin }: QuickActions
 
     if (wechatRules.length > 0) {
       // Toggle existing rules
+      const wasEnabled = wechatRules[0].enabled
       for (const rule of wechatRules) {
-        store.updateAutoReplyRule(rule.id, { enabled: !rule.enabled })
+        store.updateAutoReplyRule(rule.id, { enabled: !wasEnabled })
       }
-      const newState = !wechatRules[0].enabled
+      const newState = !wasEnabled
       const feedback = useFeedbackStore.getState()
       if (newState) {
         feedback.addToast({ icon: '\uD83D\uDCAC', message: '微信监控已启动', type: 'success' })
@@ -111,9 +112,9 @@ export default function QuickActionsPanel({ onClose, onOpenAdmin }: QuickActions
       <div
         className="w-full max-w-[340px] max-h-[500px] rounded-2xl overflow-hidden flex flex-col"
         style={{
-          background: 'rgba(20, 20, 30, 0.98)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+          background: 'var(--bg-primary)',
+          border: '1px solid var(--border-default)',
+          boxShadow: 'var(--shadow-panel)',
         }}
       >
         {/* Header */}

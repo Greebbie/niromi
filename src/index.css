@@ -2,6 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Design Tokens ─── */
+:root {
+  --bg-primary: rgba(20, 20, 30, 0.98);
+  --bg-secondary: rgba(30, 30, 40, 0.95);
+  --bg-tertiary: rgba(255, 255, 255, 0.05);
+  --bg-hover: rgba(255, 255, 255, 0.1);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-active: rgba(96, 165, 250, 0.5);
+  --text-primary: rgba(255, 255, 255, 0.9);
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-muted: rgba(255, 255, 255, 0.4);
+  --accent-blue: rgba(59, 130, 246, 0.8);
+  --accent-green: rgba(74, 222, 128, 0.6);
+  --accent-red: rgba(239, 68, 68, 0.8);
+  --accent-yellow: rgba(250, 204, 21, 0.6);
+  --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+}
+
+/* ─── Reset ─── */
 * {
   margin: 0;
   padding: 0;
@@ -16,18 +39,100 @@ html, body, #root {
   user-select: none;
 }
 
-/* Scrollbar styling for chat */
-::-webkit-scrollbar {
-  width: 4px;
+/* ─── Scrollbar (webkit + firefox) ─── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.5); }
+* { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.3) transparent; }
+
+/* ─── Global Input ─── */
+.nr-input {
+  width: 100%;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  border-radius: var(--radius-md);
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--border-default);
+  outline: none;
+  transition: border-color 0.15s;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+.nr-input:focus {
+  border-color: var(--border-active);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.15);
 }
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
+.nr-input::placeholder {
+  color: var(--text-muted);
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
+.nr-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
+/* Select variant */
+.nr-select {
+  width: 100%;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  border-radius: var(--radius-md);
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--border-default);
+  outline: none;
+  transition: border-color 0.15s;
+  cursor: pointer;
+}
+.nr-select:focus {
+  border-color: var(--border-active);
+}
+.nr-select option {
+  background: rgb(30, 30, 40);
+  color: white;
+}
+
+/* ─── Global Button ─── */
+.btn-primary {
+  background: var(--accent-blue);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.btn-primary:hover {
+  background: rgba(59, 130, 246, 1);
+}
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Animations ─── */
+@keyframes pulse-mic {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+.animate-pulse-mic {
+  animation: pulse-mic 1s ease-in-out infinite;
+}
+
+@keyframes typing-dot {
+  0%, 20% { opacity: 0.2; }
+  50% { opacity: 1; }
+  80%, 100% { opacity: 0.2; }
+}
+.animate-typing-dot {
+  animation: typing-dot 1.4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}

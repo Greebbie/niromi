@@ -28,7 +28,7 @@ function ToastItem({ toast }: { toast: Toast }) {
       transition={{ duration: 0.2 }}
       className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] border backdrop-blur-sm select-none ${TYPE_STYLES[toast.type]}`}
       style={{
-        background: 'rgba(25, 25, 35, 0.9)',
+        background: 'var(--bg-primary)',
       }}
     >
       <span className="text-sm leading-none">{toast.icon}</span>

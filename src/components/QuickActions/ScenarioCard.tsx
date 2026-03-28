@@ -25,8 +25,8 @@ export default function ScenarioCard({
     <div
       className="rounded-xl overflow-hidden transition-colors"
       style={{
-        background: isActive ? 'rgba(74, 222, 128, 0.08)' : 'rgba(255, 255, 255, 0.04)',
-        border: `1px solid ${isActive ? 'rgba(74, 222, 128, 0.25)' : 'rgba(255, 255, 255, 0.08)'}`,
+        background: isActive ? 'rgba(74, 222, 128, 0.08)' : 'var(--bg-tertiary, rgba(255, 255, 255, 0.04))',
+        border: `1px solid ${isActive ? 'rgba(74, 222, 128, 0.25)' : 'var(--border-default)'}`,
       }}
     >
       <div className="flex items-center gap-3 px-3 py-2.5">
@@ -45,7 +45,7 @@ export default function ScenarioCard({
           onClick={onToggle}
           className="relative w-8 h-4 rounded-full transition-colors shrink-0"
           style={{
-            background: isActive ? 'rgba(74, 222, 128, 0.6)' : 'rgba(255, 255, 255, 0.15)',
+            background: isActive ? 'rgba(74, 222, 128, 0.6)' : 'var(--bg-toggle-off, rgba(255, 255, 255, 0.15))',
           }}
         >
           <motion.div

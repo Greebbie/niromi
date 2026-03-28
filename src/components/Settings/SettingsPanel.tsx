@@ -66,8 +66,8 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
       transition={{ duration: 0.15 }}
       className="w-[360px] max-h-[500px] rounded-2xl overflow-hidden flex flex-col"
       style={{
-        background: 'rgba(30, 30, 40, 0.98)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        background: 'var(--bg-secondary)',
+        border: '1px solid var(--border-default)',
       }}
     >
       {/* Header */}
@@ -120,7 +120,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
                     type="password"
                     value={config.apiKey}
                     onChange={(e) => config.setApiKey(e.target.value)}
-                    className="input-field"
+                    className="nr-input"
                     placeholder="sk-..."
                   />
                 </>
@@ -132,7 +132,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
                   <input
                     value={config.baseUrl}
                     onChange={(e) => config.setBaseUrl(e.target.value)}
-                    className="input-field"
+                    className="nr-input"
                     placeholder="http://localhost:11434/v1"
                   />
                 </>
@@ -144,7 +144,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
                   <input
                     value={config.groupId}
                     onChange={(e) => config.setGroupId(e.target.value)}
-                    className="input-field"
+                    className="nr-input"
                     placeholder="Group ID"
                   />
                 </>
@@ -154,7 +154,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
               <input
                 value={config.model}
                 onChange={(e) => config.setModel(e.target.value)}
-                className="input-field"
+                className="nr-input"
                 placeholder="claude-sonnet-4-20250514"
               />
 
@@ -224,7 +224,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
               <button
                 onClick={handleTest}
                 disabled={testing}
-                className="w-full mt-3 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-500/30 text-white hover:bg-blue-500/50 disabled:opacity-40 transition-colors"
+                className="btn-primary w-full mt-3 disabled:opacity-40"
               >
                 {testing ? t('settings.ai.testing') : t('settings.ai.test')}
               </button>
@@ -237,7 +237,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
               <input
                 value={config.userName}
                 onChange={(e) => config.setUserName(e.target.value)}
-                className="input-field"
+                className="nr-input"
                 placeholder={t('settings.personality.userNamePlaceholder')}
               />
               <div className="flex items-center justify-between mt-2 mb-3">
@@ -305,7 +305,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
               <select
                 value={config.language}
                 onChange={(e) => config.setLanguage(e.target.value as 'zh' | 'en' | 'auto')}
-                className="input-field"
+                className="nr-select"
               >
                 <option value="auto">{t('settings.general.auto')}</option>
                 <option value="zh">中文</option>
@@ -319,7 +319,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
               <select
                 value={config.screenTimeReminder}
                 onChange={(e) => config.setScreenTimeReminder(Number(e.target.value))}
-                className="input-field"
+                className="nr-select"
               >
                 <option value={0}>{t('settings.general.screenTime.off')}</option>
                 <option value={30}>{t('settings.general.screenTime.30')}</option>
@@ -373,21 +373,6 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
         </AnimatePresence>
       </div>
 
-      <style>{`
-        .input-field {
-          width: 100%;
-          background: rgba(255,255,255,0.08);
-          color: white;
-          font-size: 0.75rem;
-          border-radius: 0.5rem;
-          padding: 0.5rem 0.75rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          outline: none;
-        }
-        .input-field:focus {
-          border-color: rgba(96,165,250,0.5);
-        }
-      `}</style>
     </motion.div>
   )
 }
@@ -481,10 +466,9 @@ function STTSetup({ lang }: { lang: string }) {
 
   const handleModelChange = async (newModel: string) => {
     config.setSttModel(newModel)
-    // If already initialized, need re-download
+    // Changed model requires re-download
     if (status === 'ready') {
       setStatus('not-downloaded')
-      config.setVisionEnabled(false) // reset until re-downloaded
     }
   }
 
@@ -527,7 +511,7 @@ function STTSetup({ lang }: { lang: string }) {
         value={config.sttModel}
         onChange={(e) => handleModelChange(e.target.value)}
         disabled={status === 'downloading'}
-        className="input-field"
+        className="nr-select"
       >
         <option value="Xenova/whisper-tiny">Tiny (~75MB, {lang === 'zh' ? '快' : 'fast'})</option>
         <option value="Xenova/whisper-base">Base (~150MB, {lang === 'zh' ? '更准' : 'accurate'})</option>
@@ -539,7 +523,7 @@ function STTSetup({ lang }: { lang: string }) {
       <select
         value={config.sttLanguage}
         onChange={(e) => config.setSttLanguage(e.target.value as 'auto' | 'zh' | 'en')}
-        className="input-field"
+        className="nr-select"
       >
         <option value="auto">{lang === 'zh' ? '自动' : 'Auto'}</option>
         <option value="zh">中文</option>
@@ -550,7 +534,7 @@ function STTSetup({ lang }: { lang: string }) {
       {(status === 'not-downloaded' || status === 'error') && (
         <button
           onClick={handleDownload}
-          className="w-full px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-500/30 text-white hover:bg-blue-500/50 transition-colors"
+          className="btn-primary w-full"
         >
           {lang === 'zh'
             ? `下载模型 (${modelSizes[config.sttModel] || '~75MB'})`

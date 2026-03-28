@@ -158,7 +158,7 @@ export default function AdminAutoReply() {
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="Auto reply rule..."
-                className="ar-input"
+                className="nr-input"
               />
             </div>
             <div>
@@ -166,7 +166,7 @@ export default function AdminAutoReply() {
               <select
                 value={form.app}
                 onChange={(e) => setForm({ ...form, app: e.target.value as AppType })}
-                className="ar-input"
+                className="nr-select"
               >
                 {APP_OPTIONS.map((a) => (
                   <option key={a.id} value={a.id}>{a.label}</option>
@@ -182,7 +182,7 @@ export default function AdminAutoReply() {
                 value={form.contactPattern}
                 onChange={(e) => setForm({ ...form, contactPattern: e.target.value })}
                 placeholder="regex or name..."
-                className="ar-input"
+                className="nr-input"
               />
             </div>
             <div>
@@ -191,7 +191,7 @@ export default function AdminAutoReply() {
                 value={form.triggerKeywords}
                 onChange={(e) => setForm({ ...form, triggerKeywords: e.target.value })}
                 placeholder="urgent, help, ..."
-                className="ar-input"
+                className="nr-input"
               />
             </div>
           </div>
@@ -225,7 +225,7 @@ export default function AdminAutoReply() {
                 value={form.replyTemplate}
                 onChange={(e) => setForm({ ...form, replyTemplate: e.target.value })}
                 placeholder="I'm currently away..."
-                className="ar-input resize-none"
+                className="nr-input resize-none"
               />
             </div>
           )}
@@ -237,7 +237,7 @@ export default function AdminAutoReply() {
               min={0}
               value={form.idleMinutes}
               onChange={(e) => setForm({ ...form, idleMinutes: parseInt(e.target.value) || 0 })}
-              className="ar-input w-32"
+              className="nr-input w-32"
             />
           </div>
 
@@ -265,25 +265,6 @@ export default function AdminAutoReply() {
         </button>
       )}
 
-      <style>{`
-        .ar-input {
-          width: 100%;
-          background: rgba(255,255,255,0.05);
-          color: rgba(255,255,255,0.7);
-          font-size: 0.75rem;
-          border-radius: 0.375rem;
-          padding: 0.375rem 0.5rem;
-          border: 1px solid rgba(255,255,255,0.08);
-          outline: none;
-        }
-        .ar-input:focus {
-          border-color: rgba(96,165,250,0.5);
-        }
-        .ar-input option {
-          background: #1e1e28;
-          color: rgba(255,255,255,0.8);
-        }
-      `}</style>
     </div>
   )
 }

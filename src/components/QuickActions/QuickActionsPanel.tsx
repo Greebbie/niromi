@@ -5,6 +5,7 @@ import { useAdminStore } from '@/stores/adminStore'
 import { useFeedbackStore } from '@/stores/feedbackStore'
 import { createClaudeCodePreset, createWebWatchPreset, createBuildWatchPreset, removePreset, isPresetActive } from '@/core/skills/watch-presets'
 import { useI18n } from '@/i18n/useI18n'
+import { useSkillConfigStore } from '@/stores/skillConfigStore'
 
 interface QuickActionsPanelProps {
   onClose: () => void
@@ -138,7 +139,7 @@ export default function QuickActionsPanel({ onClose, onOpenAdmin }: QuickActions
             isActive={isWeChatActive}
             onToggle={toggleWeChat}
           >
-            <div className="text-[10px] text-white/50 space-y-1">
+            <div className="text-caption text-white/50 space-y-1">
               <p>{isWeChatActive ? t('qa.active') : t('qa.inactive')}</p>
               {isWeChatActive && (
                 <p className="text-green-400/70">
@@ -165,7 +166,7 @@ export default function QuickActionsPanel({ onClose, onOpenAdmin }: QuickActions
                 <button
                   key={preset.id}
                   onClick={() => togglePreset(preset.id)}
-                  className={`w-full text-left text-[10px] px-2 py-1 rounded-md transition-colors ${
+                  className={`w-full text-left text-caption px-2 py-1 rounded-md transition-colors ${
                     preset.active
                       ? 'bg-green-400/15 text-green-300/80'
                       : 'text-white/50 hover:bg-white/5 hover:text-white/70'
@@ -176,21 +177,42 @@ export default function QuickActionsPanel({ onClose, onOpenAdmin }: QuickActions
               ))}
               <button
                 onClick={toggleWatch}
-                className="w-full text-left text-[10px] px-2 py-1 rounded-md text-white/50 hover:bg-white/5 hover:text-white/70"
+                className="w-full text-left text-caption px-2 py-1 rounded-md text-white/50 hover:bg-white/5 hover:text-white/70"
               >
                 {'\u2699\uFE0F'} {t('qa.presetCustom')}
               </button>
             </div>
           </ScenarioCard>
 
-          {/* Skills management */}
+          {/* Skill Hub */}
           <ScenarioCard
             icon={'\uD83E\uDDE9'}
             title={t('qa.manageSkills')}
             description={t('qa.manageSkillsDesc')}
-            isActive={false}
+            isActive={useSkillConfigStore((s) => Object.values(s.configs).some(c => c.enabled))}
             onToggle={openSkills}
-          />
+          >
+            <div className="space-y-1.5">
+              <button
+                onClick={() => { onOpenAdmin(); onClose() }}
+                className="w-full text-left text-caption px-2 py-1 rounded-md text-white/50 hover:bg-white/5 hover:text-white/70"
+              >
+                {'\u2795'} {t('qa.createSkill')}
+              </button>
+              <button
+                onClick={() => { onOpenAdmin(); onClose() }}
+                className="w-full text-left text-caption px-2 py-1 rounded-md text-white/50 hover:bg-white/5 hover:text-white/70"
+              >
+                {'\uD83D\uDED2'} {t('qa.browseSkills')}
+              </button>
+              <button
+                onClick={() => { onOpenAdmin(); onClose() }}
+                className="w-full text-left text-caption px-2 py-1 rounded-md text-white/50 hover:bg-white/5 hover:text-white/70"
+              >
+                {'\uD83D\uDCE6'} {t('qa.mySkills')}
+              </button>
+            </div>
+          </ScenarioCard>
 
           {/* Quick commands — informational, always "active" */}
           <ScenarioCard
@@ -200,7 +222,7 @@ export default function QuickActionsPanel({ onClose, onOpenAdmin }: QuickActions
             isActive={true}
             onToggle={() => { onClose() }}
           >
-            <div className="text-[10px] text-white/50">
+            <div className="text-caption text-white/50">
               <p>{"\"打开 Chrome\" · \"去 GitHub\" · \"现在几点\""}</p>
             </div>
           </ScenarioCard>

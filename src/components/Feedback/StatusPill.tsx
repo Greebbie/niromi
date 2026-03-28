@@ -31,7 +31,7 @@ export default function StatusPillBar({ onOpenAdmin, onOpenQuickActions }: Statu
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.2 }}
             onClick={() => handleClick(pill.targetPanel)}
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] text-white/70 hover:text-white/90 transition-colors select-none cursor-pointer"
+            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-caption text-white/70 hover:text-white/90 transition-colors select-none cursor-pointer"
             style={{
               background: 'var(--bg-primary)',
               border: '1px solid var(--border-default)',

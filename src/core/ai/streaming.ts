@@ -10,6 +10,9 @@ export async function* parseSSE(stream: ReadableStream<Uint8Array>): AsyncIterab
   const reader = stream.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
+  // Carry partial event state across chunks
+  let currentEvent = ''
+  let currentData = ''
 
   try {
     while (true) {
@@ -17,11 +20,8 @@ export async function* parseSSE(stream: ReadableStream<Uint8Array>): AsyncIterab
       if (done) break
 
       buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
+      const lines = buffer.split(/\r?\n/)
       buffer = lines.pop() || ''
-
-      let currentEvent = ''
-      let currentData = ''
 
       for (const line of lines) {
         if (line.startsWith('event: ')) {
@@ -37,16 +37,11 @@ export async function* parseSSE(stream: ReadableStream<Uint8Array>): AsyncIterab
           }
         }
       }
-
-      // Don't discard partial event state between chunks —
-      // carry currentEvent/currentData forward only if buffer still has content
     }
 
     // Handle any remaining data in the buffer after stream ends
     if (buffer.trim()) {
-      const lines = buffer.split('\n')
-      let currentEvent = ''
-      let currentData = ''
+      const lines = buffer.split(/\r?\n/)
       for (const line of lines) {
         if (line.startsWith('event: ')) {
           currentEvent = line.slice(7).trim()
@@ -54,9 +49,10 @@ export async function* parseSSE(stream: ReadableStream<Uint8Array>): AsyncIterab
           currentData += (currentData ? '\n' : '') + line.slice(6)
         }
       }
-      if (currentData) {
-        yield { event: currentEvent, data: currentData }
-      }
+    }
+    // Flush any remaining partial event
+    if (currentData) {
+      yield { event: currentEvent, data: currentData }
     }
   } finally {
     reader.releaseLock()

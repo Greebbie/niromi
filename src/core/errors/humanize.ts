@@ -36,9 +36,15 @@ const patterns: ErrorPattern[] = [
     zh: 'Minimax 返回了错误，检查一下 API Key 和 Group ID？',
     en: 'Minimax returned an error. Check your API Key and Group ID?',
   },
-  // Server errors
+  // 503 / overloaded / service unavailable — specific actionable advice
   {
-    test: (m) => /\b(500|502|503|504|internal server|bad gateway|service unavailable|overloaded)/i.test(m),
+    test: (m) => /\b(503|overloaded|service unavailable)/i.test(m),
+    zh: 'AI 服务暂时过载了...可以在设置里切换其他模型，或稍后再试~',
+    en: 'AI service is overloaded... Try switching models in Settings, or wait a moment~',
+  },
+  // Server errors (general)
+  {
+    test: (m) => /\b(500|502|504|internal server|bad gateway)/i.test(m),
     zh: 'AI 服务那边好像出了点问题...',
     en: 'The AI service seems to be having issues...',
   },

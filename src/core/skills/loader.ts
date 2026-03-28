@@ -25,6 +25,15 @@ export async function initMarketplaceSkills(): Promise<void> {
       const { meta } = parseSkillMd(local.skillMdContent, local.files)
       if (!meta.name) continue
 
+      // Validate requirements before registering
+      if (meta.requires?.length) {
+        const missing = await checkRequirements(meta.requires)
+        if (missing.length > 0) {
+          console.warn(`[Niromi] Skill "${local.id}" skipped — missing: ${missing.join(', ')}`)
+          continue
+        }
+      }
+
       const skillDir = await window.electronAPI.skillGetDir()
 
       skillRegistry.register({
@@ -54,6 +63,27 @@ export async function initMarketplaceSkills(): Promise<void> {
   }
 }
 
+/** Validate a skill ID — only allows safe characters, no path traversal */
+function isValidSkillId(id: string): boolean {
+  return /^[a-z0-9][a-z0-9_-]*$/.test(id) && !id.includes('..')
+}
+
+/** Check if required binaries exist on PATH. Returns names of missing ones. */
+async function checkRequirements(bins: string[]): Promise<string[]> {
+  const missing: string[] = []
+  for (const bin of bins) {
+    // Validate binary name to prevent shell injection
+    if (!/^[\w.-]+$/.test(bin)) { missing.push(bin); continue }
+    try {
+      const cmd = process.platform === 'win32' ? `where ${bin}` : `which ${bin}`
+      await window.electronAPI.runShell(cmd)
+    } catch {
+      missing.push(bin)
+    }
+  }
+  return missing
+}
+
 function createShellExecutor(skillDir: string, interpreter: string) {
   return async (input: string) => {
     const result = await window.electronAPI.skillExecScript({
@@ -68,6 +98,105 @@ function createShellExecutor(skillDir: string, interpreter: string) {
       content: result.exitCode === 0 ? output : humanizeError(output, 'auto'),
     })
   }
+}
+
+/** Map interpreter to script filename */
+const INTERPRETER_FILE: Record<string, string> = {
+  node: 'run.js',
+  python: 'run.py',
+  bash: 'run.sh',
+  powershell: 'run.ps1',
+}
+
+export interface CreateLocalSkillConfig {
+  id: string
+  name: string
+  nameEn: string
+  icon: string
+  description: string
+  category?: string
+  aiInvocable?: boolean
+  script: string
+  interpreter: 'node' | 'python' | 'bash' | 'powershell'
+}
+
+/**
+ * Create a local skill programmatically — writes SKILL.md + script to disk and hot-registers.
+ * This is the backend for both the UI wizard and natural language skill creation.
+ */
+export async function createLocalSkill(config: CreateLocalSkillConfig): Promise<boolean> {
+  // Validate skill ID to prevent path traversal
+  if (!isValidSkillId(config.id)) {
+    console.error(`[Niromi] Invalid skill ID: "${config.id}"`)
+    return false
+  }
+  try {
+    const skillDir = await window.electronAPI.skillGetDir()
+    const skillPath = `${skillDir}/${config.id}`
+
+    // 1. Create folder
+    await window.electronAPI.createDirectory(skillPath)
+
+    // 2. Generate SKILL.md
+    const category = config.category || 'custom'
+    const aiInvocable = config.aiInvocable !== false
+    const skillMdContent = [
+      '---',
+      `name: ${config.name}`,
+      `nameEn: ${config.nameEn}`,
+      `icon: ${config.icon}`,
+      `description: ${config.description}`,
+      `category: ${category}`,
+      `executionMode: shell`,
+      `aiInvocable: ${aiInvocable}`,
+      '---',
+      '',
+      `# ${config.name}`,
+      '',
+      config.description,
+    ].join('\n')
+
+    // 3. Write SKILL.md
+    await window.electronAPI.writeFile(`${skillPath}/SKILL.md`, skillMdContent)
+
+    // 4. Write script file
+    const scriptFile = INTERPRETER_FILE[config.interpreter] || 'run.js'
+    await window.electronAPI.writeFile(`${skillPath}/${scriptFile}`, config.script)
+
+    // 5. Parse and hot-register (no restart needed)
+    const files = ['SKILL.md', scriptFile]
+    const { meta } = parseSkillMd(skillMdContent, files)
+
+    // Unregister if already exists (overwrite scenario)
+    if (skillRegistry.get(config.id)) {
+      skillRegistry.unregister(config.id)
+    }
+
+    skillRegistry.register({
+      id: config.id,
+      name: meta.name || config.name,
+      nameEn: meta.nameEn || config.nameEn,
+      icon: meta.icon || config.icon,
+      category: (meta.category as any) || 'custom',
+      description: meta.description || config.description,
+      keywords: meta.keywords || [],
+      aiInvocable: aiInvocable,
+      execute: createShellExecutor(skillPath, config.interpreter),
+    })
+
+    return true
+  } catch (err) {
+    console.error('[Niromi] createLocalSkill failed:', err)
+    return false
+  }
+}
+
+/**
+ * Re-scan and register any new local skills without restart.
+ * Skips already-registered skills (same logic as initMarketplaceSkills).
+ */
+export async function reloadLocalSkills(): Promise<void> {
+  await initMarketplaceSkills()
 }
 
 /**

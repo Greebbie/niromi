@@ -27,7 +27,7 @@ export default function CostBadge() {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="text-white/50 text-[10px] font-mono select-none hover:text-white/70 transition-colors"
+        className="text-white/50 text-caption font-mono select-none hover:text-white/70 transition-colors"
       >
         {isFree ? t('cost.free') : (
           <>

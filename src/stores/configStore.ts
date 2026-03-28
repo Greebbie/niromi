@@ -146,7 +146,21 @@ export const useConfigStore = create<ConfigState>((set) => ({
     }
   },
 
-  setProvider: (provider) => { set({ provider }); persistConfig() },
+  setProvider: (provider) => {
+    // Auto-set default model when switching providers so users don't see stale model names
+    const defaultModels: Partial<Record<AIProviderType, string>> = {
+      claude: 'claude-sonnet-4-20250514',
+      openai: 'gpt-4o',
+      deepseek: 'deepseek-chat',
+      qwen: 'qwen-turbo',
+      minimax: 'MiniMax-M2.5',
+      ollama: '',
+      vllm: '',
+    }
+    const model = defaultModels[provider] ?? ''
+    set({ provider, model })
+    persistConfig()
+  },
   setApiKey: (apiKey) => { set({ apiKey }); persistConfig() },
   setModel: (model) => { set({ model }); persistConfig() },
   setBaseUrl: (baseUrl) => { set({ baseUrl }); persistConfig() },

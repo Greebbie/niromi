@@ -413,6 +413,22 @@ export function registerBuiltinSkills() {
     },
   })
 
+  skillRegistry.register({
+    id: 'create_skill',
+    name: '创建技能',
+    nameEn: 'Create Skill',
+    icon: '\u2795',
+    category: 'system',
+    description: 'Create a custom skill (API, script, automation)',
+    keywords: ['创建', '新建', '技能', '添加', 'create', 'skill', 'add', 'new', 'api', 'custom'],
+    execute: async () => {
+      useChatStore.getState().addMessage({
+        role: 'assistant',
+        content: '打开控制中心 → 技能 → 点击「+ 创建技能」，就可以创建自定义技能啦！\n\n比如你可以创建一个调用咖啡机 API 的技能，之后直接跟我说"做杯咖啡"就行~ ☕',
+      })
+    },
+  })
+
   // Register configurable skills
   registerWeChatDelegateSkill()
 

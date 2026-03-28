@@ -9,6 +9,12 @@ import { speakText, stopSpeaking } from '@/core/tts'
 import { toolRegistry } from '@/core/tools'
 import { useI18n } from '@/i18n/useI18n'
 import ToolCallBadge from './ToolCallBadge'
+import CodeBlock from './CodeBlock'
+
+function formatTimestamp(ts: number): string {
+  const d = new Date(ts)
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
 
 function CopyButton({ text }: { text: string }) {
   const handleCopy = useCallback(() => {
@@ -18,7 +24,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="absolute top-1 right-1 opacity-20 group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20 rounded px-1.5 py-0.5 text-[10px] text-white/70"
+      className="absolute top-1 right-1 opacity-20 group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20 rounded px-1.5 py-0.5 text-caption text-white/70"
     >
       Copy
     </button>
@@ -56,7 +62,7 @@ function SpeakButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleClick}
-      className="absolute top-1 right-8 opacity-20 group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20 rounded px-1.5 py-0.5 text-[10px] text-white/70"
+      className="absolute top-1 right-8 opacity-20 group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20 rounded px-1.5 py-0.5 text-caption text-white/70"
       title={isSpeaking ? t('chat.stopSpeaking') : t('chat.speak')}
     >
       {isSpeaking ? '\u23F9' : '\uD83D\uDD0A'}
@@ -72,24 +78,15 @@ const markdownComponents: Components = {
     </a>
   ),
   code: ({ className, children }) => {
-    const isBlock = className?.includes('language-')
-    if (isBlock) {
+    const langMatch = className?.match(/language-(\w+)/)
+    if (langMatch || className?.includes('language-')) {
+      const lang = langMatch?.[1]
       return (
-        <div className="relative group/code my-1">
-          <pre className="bg-black/30 rounded-lg p-2 overflow-x-auto">
-            <code className="font-mono text-xs text-white/90">{children}</code>
-          </pre>
-          <button
-            onClick={() => navigator.clipboard.writeText(String(children).replace(/\n$/, ''))}
-            className="absolute top-1 right-1 opacity-20 group-hover/code:opacity-100 transition-opacity bg-white/10 hover:bg-white/20 rounded px-1.5 py-0.5 text-[10px] text-white/70"
-          >
-            Copy
-          </button>
-        </div>
+        <CodeBlock language={lang}>{String(children).replace(/\n$/, '')}</CodeBlock>
       )
     }
     return (
-      <code className="bg-white/20 rounded px-3 py-2 font-mono text-xs">{children}</code>
+      <code className="bg-white/20 rounded px-1 py-0.5 font-mono text-xs">{children}</code>
     )
   },
   pre: ({ children }) => <>{children}</>,
@@ -164,11 +161,19 @@ export default function MessageList({ onOpenAdmin }: MessageListProps) {
     },
   ]
 
+  const [showScrollBtn, setShowScrollBtn] = useState(false)
+
   // Track scroll position to avoid interrupting user reading history
   const handleScroll = useCallback(() => {
     const el = scrollContainerRef.current
     if (!el) return
-    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < el.clientHeight * 0.15
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+    isNearBottomRef.current = distFromBottom < el.clientHeight * 0.15
+    setShowScrollBtn(distFromBottom > 100)
+  }, [])
+
+  const scrollToBottom = useCallback(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [])
 
   // Auto-scroll to bottom only when user is near bottom
@@ -195,14 +200,14 @@ export default function MessageList({ onOpenAdmin }: MessageListProps) {
   const showTyping = isStreaming && visibleMessages.length > 0 && visibleMessages[visibleMessages.length - 1]?.content === ''
 
   return (
-    <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-3 space-y-2 min-h-[100px] max-h-[320px]">
+    <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-3 space-y-2 min-h-[100px] max-h-[320px] relative" aria-live="polite">
       {visibleMessages.length === 0 && (
         <div className="py-3 px-1">
           <p className="text-white/50 text-xs mb-3">{t('chat.empty')}</p>
           <div className="space-y-2.5">
             {capabilityCategories.map((cat) => (
               <div key={cat.label}>
-                <p className="text-white/40 text-[10px] mb-1">
+                <p className="text-white/40 text-caption mb-1">
                   {cat.icon} {cat.label}
                 </p>
                 <div className="flex flex-wrap gap-1">
@@ -225,7 +230,7 @@ export default function MessageList({ onOpenAdmin }: MessageListProps) {
               </div>
             ))}
           </div>
-          <p className="text-white/30 text-[10px] mt-3 text-center">
+          <p className="text-white/30 text-caption mt-3 text-center">
             {t('chat.emptyHint')}
           </p>
         </div>
@@ -233,7 +238,7 @@ export default function MessageList({ onOpenAdmin }: MessageListProps) {
       {hasMore && (
         <button
           onClick={() => setShowAll(true)}
-          className="w-full text-center text-white/30 hover:text-white/50 text-[10px] py-1 transition-colors"
+          className="w-full text-center text-white/30 hover:text-white/50 text-caption py-1 transition-colors"
         >
           {t('chat.loadMore')}
         </button>
@@ -247,10 +252,10 @@ export default function MessageList({ onOpenAdmin }: MessageListProps) {
           className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
         >
           <div
-            className={`relative group max-w-[85%] rounded-xl px-3 py-2 text-sm leading-relaxed ${
+            className={`relative group max-w-[85%] px-3 py-2 text-sm leading-relaxed ${
               msg.role === 'user'
-                ? 'bg-blue-500/80 text-white'
-                : 'bg-white/10 text-white/90'
+                ? 'bg-gradient-to-br from-blue-500/70 to-blue-600/60 text-white rounded-2xl rounded-br-md'
+                : 'bg-white/8 border border-white/5 text-white/90 rounded-2xl rounded-bl-md'
             }`}
           >
             {msg.role === 'assistant' ? (
@@ -285,11 +290,24 @@ export default function MessageList({ onOpenAdmin }: MessageListProps) {
             )}
             {msg.content && msg.role === 'assistant' && ttsEnabled && <SpeakButton text={msg.content} />}
             {msg.content && <CopyButton text={msg.content} />}
+            {/* Hover timestamp */}
+            <span className="text-[9px] text-white/30 opacity-0 group-hover:opacity-100 transition-opacity block mt-0.5 select-none">
+              {formatTimestamp(msg.timestamp)}
+            </span>
           </div>
         </motion.div>
       ))}
       {showTyping && <TypingIndicator />}
       <div ref={bottomRef} />
+      {showScrollBtn && (
+        <button
+          onClick={scrollToBottom}
+          aria-label={t('chat.scrollToBottom')}
+          className="sticky bottom-2 left-full -translate-x-3 w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 text-white/60 hover:text-white/90 flex items-center justify-center text-sm transition-colors shadow-lg backdrop-blur-sm"
+        >
+          {'\u2193'}
+        </button>
+      )}
     </div>
   )
 }

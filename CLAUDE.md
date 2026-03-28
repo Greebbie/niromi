@@ -114,21 +114,33 @@ Niromi 可以被"委托"在用户不在时管理电脑，但**核心原则不变
 - **角色要"活"**: 情绪用 float 数值 + 衰减，不用 enum 硬切换。呼吸用 CSS，眼球跟踪用 transform
 - **用户永远有控制权**: 低风险直接做，中风险展示计划确认，高风险明确警告
 - **错误要人性化**: 永远不显示技术 error message，翻译为 Niromi 的话
+- **借鉴 OpenClaw 精华，去其糟粕**: 工具调用 30s 超时防卡死、Skill 依赖预校验防运行时崩溃、旧 tool 结果压缩省 token、503 友好提示引导换模型、连续 3 次工具失败自动降级纯文本。但不学 OpenClaw 的 agent 自主权和 15KB system prompt
 
 ## 目录结构
 
 - `electron/` — Electron 主进程 (IPC: 窗口、系统、视觉、记忆DB、监控、自动化)
 - `src/core/ai/` — AI Provider 抽象 + 各实现 + SSE 流式解析
+  - `aiContext.ts` — AI 上下文收集 (视觉/记忆/工具定义)
+  - `aiLoop.ts` — 多轮工具调用循环 (流式/loop 检测/超时/降级)
+  - `models.ts` — 每个 provider 的预设 model 列表 (用于 ModelSelect 下拉框)
 - `src/core/tools/` — Tool 注册表 + 权限检查 + 审计日志
 - `src/core/parser/` — 本地命令解析器 (零 token 操作)
+  - `local.ts` — 薄编排层 (~60 行)
+  - `types.ts` — LocalMatch + Pattern 接口
+  - `utils.ts` — 编辑距离 + 模糊匹配
+  - `data/known-apps.ts` — 已知应用集合 (可扩展)
+  - `data/known-websites.ts` — 已知网站映射 (可扩展)
+  - `matchers/index.ts` — 按类别组织的所有匹配模式
 - `src/core/memory/` — SQLite 三层记忆 (identity/preferences/episodes) + FTS5 事实搜索
 - `src/core/skills/` — Skill 注册/发现/执行 (兼容 OpenClaw SKILL.md) + 看守预设 (watch-presets)
+  - SKILL.md 支持 `requires` 字段，加载时预校验依赖
 - `src/components/Character/` — 角色渲染 + 情绪系统 (monitoring/alert 新表情)
 - `src/components/Chat/` — 聊天 UI + 确认弹窗 + 费用显示 (CostBadge)
 - `src/components/Feedback/` — ActionToast (即时反馈) + StatusPill (持久状态指示)
 - `src/components/QuickActions/` — 快捷操作面板 (5 大场景一键配置)
 - `src/components/Admin/` — 管理面板 (工具权限、监控规则、自动回复、日志)
-- `src/hooks/` — useAI (AI 交互), useMonitor (监控值守), useVoiceInput (STT)
+- `src/components/ui/` — 共享 UI 原子组件 (IconButton, Toggle, ModelSelect)
+- `src/hooks/` — useAI (AI 交互, 薄编排), useMonitor (监控值守), useVoiceInput (STT)
 - `src/core/tts.ts` — TTS 语音合成 (Web Speech API)
 - `src/stores/` — Zustand stores (character, chat, config, admin, cost, feedback, commandQueue, skillConfig, marketplace)
 
@@ -205,18 +217,21 @@ interface ToolDefinition {
 - Round 14: Bug 修复 (race conditions + memory leaks + panel 互斥 + Escape + persist debounce)
 - Round 15: 125 个测试覆盖 + CLAUDE.md 愿景更新
 - Round 16: Vision 默认值保守化 (5min 轮询) + 常量提取 + README 专业化
+- Round 17: 573 个测试全覆盖 + 架构重构 (local.ts 718→60行拆分, useAI.ts 578→243行拆分) + Bug 修复 (SSE 跨 chunk 状态丢失, skillmd-parser \z 正则, coverage 版本对齐) + OpenClaw 精华借鉴 (工具超时/依赖预校验/结果压缩/503降级/连续失败降级/ModelSelect 下拉框)
 
 ## 关键常量 (src/core/constants.ts)
 
 ```
-VISION_POLL_MIN_MS     = 60s     // 视觉轮询最小间隔
-VISION_POLL_DEFAULT_MS = 300s    // 默认 5 分钟
-PRESET: claudeCode     = 120s    // Claude Code 看守
-PRESET: webWatch       = 300s    // 网页监控
-PRESET: buildWatch     = 60s     // 编译监控
-MAX_TOOL_ROUNDS        = 5       // 工具调用最大轮数
-MAX_PERSISTED_MESSAGES = 50      // 持久化消息上限
-CONFIG_PERSIST_DEBOUNCE = 300ms  // 配置保存防抖
+VISION_POLL_MIN_MS            = 60s     // 视觉轮询最小间隔
+VISION_POLL_DEFAULT_MS        = 300s    // 默认 5 分钟
+PRESET: claudeCode            = 120s    // Claude Code 看守
+PRESET: webWatch              = 300s    // 网页监控
+PRESET: buildWatch            = 60s     // 编译监控
+MAX_TOOL_ROUNDS               = 5       // 工具调用最大轮数
+MAX_PERSISTED_MESSAGES        = 50      // 持久化消息上限
+CONFIG_PERSIST_DEBOUNCE       = 300ms   // 配置保存防抖
+TOOL_CALL_TIMEOUT_MS          = 30s     // 单次工具调用超时 (防 UI 卡死)
+MAX_CONSECUTIVE_TOOL_FAILURES = 3       // 连续失败后降级纯文本
 ```
 
 ## 下次开发必读
@@ -226,5 +241,10 @@ CONFIG_PERSIST_DEBOUNCE = 300ms  // 配置保存防抖
 3. **Vision 成本控制** — 默认 5 分钟轮询，OCR 优先于 LLM Vision。常量在 constants.ts
 4. **Panel 互斥** — App.tsx 的 closeAllPanels() 确保同时只打开一个 overlay
 5. **Memory 是 SQLite** — 不是 MD 文件。FTS5 全文搜索，3 层结构化记忆 < 200 tokens 注入
-6. **125 个测试** — npm test 应全过。新功能需写测试
+6. **573 个测试** — `npm test` 应全过。新功能需写测试。覆盖率配置已对齐 (`@vitest/coverage-v8@2.1.9`)
 7. **Electron native 模块** — better-sqlite3 需要 `npx electron-rebuild -f -w better-sqlite3`
+8. **ModelSelect 下拉框** — 切换 provider 自动设默认 model，预设列表在 `src/core/ai/models.ts`
+9. **工具调用安全** — 30s 超时防卡死，连续 3 次失败降级纯文本，旧 tool 结果自动压缩省 token
+10. **Skill 依赖校验** — SKILL.md 的 `requires` 字段在加载时预校验，缺依赖的 skill 不注册
+11. **本地解析器已拆分** — `src/core/parser/` 下 data/ + matchers/ + utils.ts，新增命令在 matchers/index.ts 对应类别
+12. **useAI 已拆分** — aiContext.ts (上下文) + aiLoop.ts (工具循环) + useAI.ts (薄 hook)

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAdminStore, type AutoReplyRule } from '@/stores/adminStore'
 import { useI18n } from '@/i18n/useI18n'
+import Toggle from '@/components/ui/Toggle'
 
 type AppType = AutoReplyRule['app']
 
@@ -105,40 +106,19 @@ export default function AdminAutoReply() {
             {/* Confirm toggle */}
             <div className="flex items-center gap-1 shrink-0">
               <span className="text-white/20 text-xs">Cfm</span>
-              <button
-                onClick={() => updateAutoReplyRule(rule.id, { requireConfirm: !rule.requireConfirm })}
-                className={`w-7 h-3.5 rounded-full transition-colors relative ${
-                  rule.requireConfirm ? 'bg-yellow-500' : 'bg-white/20'
-                }`}
-              >
-                <div
-                  className={`w-2.5 h-2.5 rounded-full bg-white absolute top-0.5 transition-transform ${
-                    rule.requireConfirm ? 'left-3.5' : 'left-0.5'
-                  }`}
-                />
-              </button>
+              <Toggle value={rule.requireConfirm} onChange={() => updateAutoReplyRule(rule.id, { requireConfirm: !rule.requireConfirm })} color="yellow" />
             </div>
 
             {/* Enabled toggle */}
-            <button
-              onClick={() => updateAutoReplyRule(rule.id, { enabled: !rule.enabled })}
-              className={`w-8 h-4 rounded-full transition-colors relative shrink-0 ${
-                rule.enabled ? 'bg-blue-500' : 'bg-white/20'
-              }`}
-            >
-              <div
-                className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-transform ${
-                  rule.enabled ? 'left-4' : 'left-0.5'
-                }`}
-              />
-            </button>
+            <Toggle value={rule.enabled} onChange={() => updateAutoReplyRule(rule.id, { enabled: !rule.enabled })} />
 
             {/* Delete */}
             <button
               onClick={() => deleteAutoReplyRule(rule.id)}
               className="text-white/20 hover:text-red-400 text-xs transition-colors shrink-0"
+              aria-label={t('action.delete')}
             >
-              Del
+              {t('action.delete')}
             </button>
           </div>
         ))}

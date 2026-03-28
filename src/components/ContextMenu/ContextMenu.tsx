@@ -105,7 +105,7 @@ export default function ContextMenu({
         className="w-full px-3 py-1.5 text-left text-xs text-white/80 hover:bg-white/10 transition-colors flex justify-between items-center"
       >
         <span>{t('ctx.commandPalette')}</span>
-        <span className="text-white/30 text-[10px]">Ctrl+Space</span>
+        <span className="text-white/30 text-caption">Ctrl+Space</span>
       </button>
 
       <button

@@ -40,6 +40,12 @@ export const IDLE_SLEEP_MINUTES = 5
 /** Maximum rounds of tool calling before breaking the loop. */
 export const MAX_TOOL_ROUNDS = 5
 
+/** After this many consecutive rounds where ALL tool results fail, strip tools and let LLM respond text-only. */
+export const MAX_CONSECUTIVE_TOOL_FAILURES = 3
+
+/** Maximum time for a single tool execution (ms). Prevents UI hangs. */
+export const TOOL_CALL_TIMEOUT_MS = 30_000
+
 // --- Admin / Audit ---
 /** Maximum entries in audit log. */
 export const MAX_AUDIT_LOG = 500

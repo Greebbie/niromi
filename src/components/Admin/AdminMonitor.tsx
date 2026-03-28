@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAdminStore, type MonitorRule } from '@/stores/adminStore'
 import { useI18n } from '@/i18n/useI18n'
+import Toggle from '@/components/ui/Toggle'
 
 type TriggerType = MonitorRule['trigger']['type']
 type ActionType = MonitorRule['action']['type']
@@ -217,25 +218,15 @@ export default function AdminMonitor() {
             </div>
 
             {/* Enabled toggle */}
-            <button
-              onClick={() => updateMonitorRule(rule.id, { enabled: !rule.enabled })}
-              className={`w-8 h-4 rounded-full transition-colors relative shrink-0 ${
-                rule.enabled ? 'bg-blue-500' : 'bg-white/20'
-              }`}
-            >
-              <div
-                className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-transform ${
-                  rule.enabled ? 'left-4' : 'left-0.5'
-                }`}
-              />
-            </button>
+            <Toggle value={rule.enabled} onChange={() => updateMonitorRule(rule.id, { enabled: !rule.enabled })} />
 
             {/* Delete */}
             <button
               onClick={() => deleteMonitorRule(rule.id)}
               className="text-white/20 hover:text-red-400 text-xs transition-colors shrink-0"
+              aria-label={t('action.delete')}
             >
-              Del
+              {t('action.delete')}
             </button>
           </div>
         ))}

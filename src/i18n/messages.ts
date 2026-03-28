@@ -40,6 +40,7 @@ export const messages: Record<string, Record<string, string>> = {
     'chat.emptyHint': '输入 / 查看所有命令 · Ctrl+Space 命令面板',
     'chat.stopSpeaking': '停止朗读',
     'chat.speak': '朗读',
+    'chat.send': '发送消息',
     'chat.loadMore': '↑ 加载更多消息',
 
     // Chat capabilities
@@ -61,7 +62,7 @@ export const messages: Record<string, Record<string, string>> = {
     // ChatBubble
     'bubble.vision.off': '关闭视觉模式 — 零 token（仅读窗口标题）',
     'bubble.vision.on': '开启视觉模式 — 每次分析 ~200 tokens',
-    'bubble.admin': '管理面板',
+    'bubble.admin': '控制中心',
     'bubble.settings': '设置',
     'bubble.close': '关闭',
 
@@ -87,12 +88,12 @@ export const messages: Record<string, Record<string, string>> = {
     'ctx.help': '帮助',
 
     // Admin Panel
-    'admin.title': '管理面板',
-    'admin.tab.tools': '工具管理',
-    'admin.tab.monitor': '监控规则',
-    'admin.tab.autoreply': '自动回复',
+    'admin.title': '控制中心',
+    'admin.tab.tools': '工具',
+    'admin.tab.monitor': '监控',
+    'admin.tab.autoreply': '回复',
     'admin.tab.logs': '日志',
-    'admin.tab.skills': '技能商店',
+    'admin.tab.skills': '技能',
 
     // Marketplace
     'marketplace.search': '搜索技能...',
@@ -303,8 +304,12 @@ export const messages: Record<string, Record<string, string>> = {
     'qa.watchWeChatDesc': '有新消息时自动回复，敏感内容会屏蔽',
     'qa.watchWindow': '看守任务',
     'qa.watchWindowDesc': '监控任意窗口，检测变化后通知或操作',
-    'qa.manageSkills': '技能管理',
-    'qa.manageSkillsDesc': '安装和管理扩展技能',
+    'qa.manageSkills': '技能中心',
+    'qa.manageSkillsDesc': '创建、安装、管理你的技能',
+    'qa.skillHub': '技能中心',
+    'qa.createSkill': '创建新技能',
+    'qa.browseSkills': '浏览技能商店',
+    'qa.mySkills': '我的技能',
     'qa.quickCommand': '快速命令',
     'qa.quickCommandDesc': '打开应用、网站、系统操作',
     'qa.active': '运行中',
@@ -314,9 +319,37 @@ export const messages: Record<string, Record<string, string>> = {
     'qa.presetBuildWatch': '盯编译/下载',
     'qa.presetCustom': '自定义看守',
 
+    // Skill Creator
+    'skillCreator.title': '创建自定义技能',
+    'skillCreator.name': '技能名称',
+    'skillCreator.namePlaceholder': '例如: 查看天气',
+    'skillCreator.nameEn': '英文名称',
+    'skillCreator.nameEnPlaceholder': '例如: Check Weather',
+    'skillCreator.icon': '图标',
+    'skillCreator.iconPlaceholder': '选一个 emoji，例如 🌤️',
+    'skillCreator.description': '描述 (LLM 会看到)',
+    'skillCreator.descriptionPlaceholder': '简短描述这个技能做什么',
+    'skillCreator.aiInvocable': 'AI 可自动调用',
+    'skillCreator.interpreter': '脚本类型',
+    'skillCreator.script': '脚本内容',
+    'skillCreator.create': '创建技能',
+    'skillCreator.creating': '创建中...',
+    'skillCreator.success': '技能创建成功！',
+    'skillCreator.error': '创建失败，请检查输入',
+    'skillCreator.nameRequired': '请填写技能名称',
+    'skillCreator.descriptionRequired': '请填写描述',
+    'skillCreator.scriptRequired': '请填写脚本内容',
+    'skillCreator.toggle': '+ 创建技能',
+    'skillCreator.collapse': '收起',
+
     // Feedback
     'feedback.toolSuccess': '已完成',
     'feedback.toolError': '执行失败',
+
+    // Common actions
+    'action.delete': '删���',
+    'model.customPlaceholder': '自定义 model...',
+    'chat.scrollToBottom': '滚动到底部',
 
     // Model Routing
     'settings.ai.routing': '任务路由',
@@ -367,6 +400,7 @@ export const messages: Record<string, Record<string, string>> = {
     'chat.emptyHint': 'Type / for commands · Ctrl+Space command palette',
     'chat.stopSpeaking': 'Stop speaking',
     'chat.speak': 'Speak',
+    'chat.send': 'Send message',
     'chat.loadMore': 'Load earlier messages',
 
     // Chat capabilities
@@ -388,7 +422,7 @@ export const messages: Record<string, Record<string, string>> = {
     // ChatBubble
     'bubble.vision.off': 'Disable vision — zero tokens (window title only)',
     'bubble.vision.on': 'Enable vision — ~200 tokens per analysis',
-    'bubble.admin': 'Admin panel',
+    'bubble.admin': 'Control Center',
     'bubble.settings': 'Settings',
     'bubble.close': 'Close',
 
@@ -414,7 +448,7 @@ export const messages: Record<string, Record<string, string>> = {
     'ctx.help': 'Help',
 
     // Admin Panel
-    'admin.title': 'Admin Panel',
+    'admin.title': 'Control Center',
     'admin.tab.tools': 'Tools',
     'admin.tab.monitor': 'Monitor',
     'admin.tab.autoreply': 'Auto Reply',
@@ -630,8 +664,12 @@ export const messages: Record<string, Record<string, string>> = {
     'qa.watchWeChatDesc': 'Auto-reply to messages, blocks sensitive content',
     'qa.watchWindow': 'Watch Task',
     'qa.watchWindowDesc': 'Monitor any window, notify or act on changes',
-    'qa.manageSkills': 'Manage Skills',
-    'qa.manageSkillsDesc': 'Install and manage extension skills',
+    'qa.manageSkills': 'Skill Hub',
+    'qa.manageSkillsDesc': 'Create, install, and manage your skills',
+    'qa.skillHub': 'Skill Hub',
+    'qa.createSkill': 'Create New Skill',
+    'qa.browseSkills': 'Browse Skill Store',
+    'qa.mySkills': 'My Skills',
     'qa.quickCommand': 'Quick Command',
     'qa.quickCommandDesc': 'Open apps, websites, system operations',
     'qa.active': 'Active',
@@ -641,9 +679,37 @@ export const messages: Record<string, Record<string, string>> = {
     'qa.presetBuildWatch': 'Watch Build/Download',
     'qa.presetCustom': 'Custom Watch',
 
+    // Skill Creator
+    'skillCreator.title': 'Create Custom Skill',
+    'skillCreator.name': 'Skill Name',
+    'skillCreator.namePlaceholder': 'e.g. Check Weather',
+    'skillCreator.nameEn': 'English Name',
+    'skillCreator.nameEnPlaceholder': 'e.g. Check Weather',
+    'skillCreator.icon': 'Icon',
+    'skillCreator.iconPlaceholder': 'Pick an emoji, e.g. 🌤️',
+    'skillCreator.description': 'Description (LLM sees this)',
+    'skillCreator.descriptionPlaceholder': 'Briefly describe what this skill does',
+    'skillCreator.aiInvocable': 'AI can invoke automatically',
+    'skillCreator.interpreter': 'Script Type',
+    'skillCreator.script': 'Script Content',
+    'skillCreator.create': 'Create Skill',
+    'skillCreator.creating': 'Creating...',
+    'skillCreator.success': 'Skill created successfully!',
+    'skillCreator.error': 'Creation failed, please check your input',
+    'skillCreator.nameRequired': 'Skill name is required',
+    'skillCreator.descriptionRequired': 'Description is required',
+    'skillCreator.scriptRequired': 'Script content is required',
+    'skillCreator.toggle': '+ Create Skill',
+    'skillCreator.collapse': 'Collapse',
+
     // Feedback
     'feedback.toolSuccess': 'Done',
     'feedback.toolError': 'Failed',
+
+    // Common actions
+    'action.delete': 'Delete',
+    'model.customPlaceholder': 'Custom model...',
+    'chat.scrollToBottom': 'Scroll to bottom',
 
     // Model Routing
     'settings.ai.routing': 'Task Routing',

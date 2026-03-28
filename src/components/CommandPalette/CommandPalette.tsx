@@ -82,6 +82,8 @@ export default function CommandPalette({ onClose }: CommandPaletteProps) {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -20, scale: 0.95 }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+        role="dialog"
+        aria-modal="true"
         className="w-[340px] max-h-[360px] rounded-xl overflow-hidden flex flex-col"
         style={{
           background: 'var(--bg-primary)',
@@ -118,7 +120,7 @@ export default function CommandPalette({ onClose }: CommandPaletteProps) {
                   <span className="font-medium">{skill.name}</span>
                   <span className="text-white/30 text-xs ml-2">{skill.nameEn}</span>
                 </div>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-white/30 shrink-0">
+                <span className="text-caption px-1.5 py-0.5 rounded bg-white/5 text-white/30 shrink-0">
                   {categoryLabels[skill.category] || skill.category}
                 </span>
               </button>

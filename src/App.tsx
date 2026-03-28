@@ -231,7 +231,7 @@ export default function App() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="text-white/40 text-[10px] mt-1 select-none"
+            className="text-white/40 text-caption mt-1 select-none"
           >
             {t('app.hint')}
           </motion.p>

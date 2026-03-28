@@ -94,7 +94,7 @@ export default function InputBar() {
   )
 
   return (
-    <div className="p-2 border-t border-white/10 flex gap-2 items-end relative">
+    <div className="p-2 border-t border-white/10 relative">
       {showSlash && (
         <SlashMenu
           filter={input}
@@ -102,62 +102,74 @@ export default function InputBar() {
           onClose={() => setShowSlash(false)}
         />
       )}
-      <textarea
-        ref={textareaRef}
-        value={input}
-        onChange={handleInput}
-        onKeyDown={handleKeyDown}
-        placeholder={isStreaming ? t('chat.thinking') : t('chat.placeholder')}
-        disabled={isStreaming}
-        rows={1}
-        className="flex-1 bg-white/10 text-white text-sm rounded-lg px-3 py-2 resize-none outline-none placeholder:text-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
-        style={{ maxHeight: 80 }}
-      />
-      {/* Voice button — always available (local Whisper) */}
-      <div className="relative shrink-0">
-        {voiceError && (
-          <div className="absolute bottom-full mb-1 right-0 whitespace-nowrap text-[10px] text-red-400 bg-red-500/10 px-2 py-0.5 rounded">
-            {voiceError}
-          </div>
+      <div className="flex gap-2 items-end">
+        <textarea
+          ref={textareaRef}
+          value={input}
+          onChange={handleInput}
+          onKeyDown={handleKeyDown}
+          placeholder={isStreaming ? t('chat.thinking') : `${t('chat.placeholder')} (Enter)`}
+          disabled={isStreaming}
+          rows={1}
+          aria-label={t('chat.placeholder')}
+          className="flex-1 bg-white/10 text-white text-sm rounded-lg px-3 py-2 resize-none outline-none placeholder:text-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ maxHeight: 80 }}
+        />
+        {/* Voice button — always available (local Whisper) */}
+        <div className="relative shrink-0">
+          {voiceError && (
+            <div className="absolute bottom-full mb-1 right-0 whitespace-nowrap text-caption text-red-400 bg-red-500/10 px-2 py-0.5 rounded">
+              {voiceError}
+            </div>
+          )}
+          {isInitializing && downloadProgress && (
+            <div className="absolute bottom-full mb-1 right-0 whitespace-nowrap text-caption text-blue-300 bg-blue-500/10 px-2 py-0.5 rounded">
+              {downloadProgress.progress != null
+                ? `${Math.round(downloadProgress.progress)}%`
+                : downloadProgress.status}
+            </div>
+          )}
+          <button
+            onClick={toggleVoice}
+            disabled={isInitializing}
+            aria-label={isInitializing ? t('chat.sttLoading') : isListening ? t('chat.stopRecording') : t('chat.voiceInput')}
+            className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center transition-colors ${
+              isInitializing
+                ? 'bg-yellow-500/40 text-white/70 animate-pulse'
+                : isListening
+                  ? 'bg-red-500/80 text-white animate-pulse-mic'
+                  : 'bg-white/10 text-white/50 hover:bg-white/20 hover:text-white/80'
+            }`}
+            title={isInitializing ? t('chat.sttLoading') : isListening ? t('chat.stopRecording') : t('chat.voiceInput')}
+          >
+            {'\uD83C\uDFA4'}
+          </button>
+        </div>
+        {isStreaming ? (
+          <button
+            onClick={abort}
+            aria-label={t('chat.stop')}
+            className="w-8 h-8 rounded-lg bg-red-500/80 text-white text-sm flex items-center justify-center hover:bg-red-500 transition-colors shrink-0"
+            title={t('chat.stop')}
+          >
+            {'\u25A0'}
+          </button>
+        ) : (
+          <button
+            onClick={handleSend}
+            disabled={!input.trim()}
+            aria-label={t('chat.send')}
+            className="w-8 h-8 rounded-lg bg-blue-500/80 text-white text-sm flex items-center justify-center hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
+          >
+            {'\u2191'}
+          </button>
         )}
-        {isInitializing && downloadProgress && (
-          <div className="absolute bottom-full mb-1 right-0 whitespace-nowrap text-[10px] text-blue-300 bg-blue-500/10 px-2 py-0.5 rounded">
-            {downloadProgress.progress != null
-              ? `${Math.round(downloadProgress.progress)}%`
-              : downloadProgress.status}
-          </div>
-        )}
-        <button
-          onClick={toggleVoice}
-          disabled={isInitializing}
-          className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center transition-colors ${
-            isInitializing
-              ? 'bg-yellow-500/40 text-white/70 animate-pulse'
-              : isListening
-                ? 'bg-red-500/80 text-white animate-pulse-mic'
-                : 'bg-white/10 text-white/50 hover:bg-white/20 hover:text-white/80'
-          }`}
-          title={isInitializing ? t('chat.sttLoading') : isListening ? t('chat.stopRecording') : t('chat.voiceInput')}
-        >
-          {'\uD83C\uDFA4'}
-        </button>
       </div>
-      {isStreaming ? (
-        <button
-          onClick={abort}
-          className="w-8 h-8 rounded-lg bg-red-500/80 text-white text-sm flex items-center justify-center hover:bg-red-500 transition-colors shrink-0"
-          title={t('chat.stop')}
-        >
-          {'\u25A0'}
-        </button>
-      ) : (
-        <button
-          onClick={handleSend}
-          disabled={!input.trim()}
-          className="w-8 h-8 rounded-lg bg-blue-500/80 text-white text-sm flex items-center justify-center hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
-        >
-          {'\u2191'}
-        </button>
+      {/* Character counter */}
+      {input.length > 0 && (
+        <div className="text-caption text-white/25 mt-1 text-right select-none">
+          {input.length}
+        </div>
       )}
     </div>
   )

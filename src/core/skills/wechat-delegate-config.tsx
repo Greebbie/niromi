@@ -46,7 +46,7 @@ export default function WeChatDelegateConfig({ config, onChange }: Props) {
     <div className="space-y-4 text-xs">
       {/* Reply mode */}
       <div>
-        <label className="text-white/50 text-[10px] uppercase tracking-wider">
+        <label className="text-white/50 text-caption uppercase tracking-wider">
           {t('skill.wechat.replyMode')}
         </label>
         <div className="flex gap-3 mt-1">
@@ -73,7 +73,7 @@ export default function WeChatDelegateConfig({ config, onChange }: Props) {
 
       {/* Reply template */}
       <div>
-        <label className="text-white/50 text-[10px] uppercase tracking-wider">
+        <label className="text-white/50 text-caption uppercase tracking-wider">
           {useAI ? t('skill.wechat.fallbackTemplate') : t('skill.wechat.replyTemplate')}
         </label>
         <textarea
@@ -88,7 +88,7 @@ export default function WeChatDelegateConfig({ config, onChange }: Props) {
       {/* Idle + max replies row */}
       <div className="flex gap-4">
         <div className="flex-1">
-          <label className="text-white/50 text-[10px] uppercase tracking-wider">
+          <label className="text-white/50 text-caption uppercase tracking-wider">
             {t('skill.wechat.idleMinutes')}
           </label>
           <input
@@ -101,7 +101,7 @@ export default function WeChatDelegateConfig({ config, onChange }: Props) {
           />
         </div>
         <div className="flex-1">
-          <label className="text-white/50 text-[10px] uppercase tracking-wider">
+          <label className="text-white/50 text-caption uppercase tracking-wider">
             {t('skill.wechat.maxReplies')}
           </label>
           <input
@@ -128,7 +128,7 @@ export default function WeChatDelegateConfig({ config, onChange }: Props) {
 
       {/* Sensitive keywords section */}
       <div className="border-t border-white/10 pt-3">
-        <label className="text-white/50 text-[10px] uppercase tracking-wider">
+        <label className="text-white/50 text-caption uppercase tracking-wider">
           {t('skill.wechat.sensitiveKeywords')}
         </label>
         <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -161,7 +161,7 @@ export default function WeChatDelegateConfig({ config, onChange }: Props) {
       {/* AI sensitive instruction */}
       {useAI && (
         <div>
-          <label className="text-white/50 text-[10px] uppercase tracking-wider">
+          <label className="text-white/50 text-caption uppercase tracking-wider">
             {t('skill.wechat.sensitiveInstruction')}
           </label>
           <textarea
@@ -177,13 +177,13 @@ export default function WeChatDelegateConfig({ config, onChange }: Props) {
       {/* Delegation log */}
       <div className="border-t border-white/10 pt-3">
         <div className="flex items-center justify-between mb-1.5">
-          <label className="text-white/50 text-[10px] uppercase tracking-wider">
+          <label className="text-white/50 text-caption uppercase tracking-wider">
             {t('skill.wechat.log')}
           </label>
           {wechatLogs.length > 0 && (
             <button
               onClick={clearDelegationLog}
-              className="text-white/30 hover:text-white/50 text-[10px]"
+              className="text-white/30 hover:text-white/50 text-caption"
             >
               {t('skill.wechat.clearLog')}
             </button>

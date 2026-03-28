@@ -3,6 +3,12 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      fontSize: {
+        'caption': ['0.625rem', { lineHeight: '0.875rem' }],
+      },
+      fontFamily: {
+        sans: ['Inter', 'Noto Sans SC', 'system-ui', '-apple-system', 'sans-serif'],
+      },
       animation: {
         'typing-dot': 'typing-dot 1.2s ease-in-out infinite',
         'pulse-mic': 'pulse-mic 1.5s ease-in-out infinite',

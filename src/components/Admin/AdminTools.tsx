@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { toolRegistry, type ToolDefinition } from '@/core/tools/registry'
 import { useAdminStore, type ToolPermission } from '@/stores/adminStore'
 import { useI18n } from '@/i18n/useI18n'
+import Toggle from '@/components/ui/Toggle'
 
 const RISK_COLORS: Record<string, string> = {
   low: 'bg-green-500/20 text-green-400',
@@ -105,32 +106,10 @@ export default function AdminTools() {
               </span>
 
               {/* Enabled toggle */}
-              <button
-                onClick={() => toggleEnabled(tool)}
-                className={`w-8 h-4 rounded-full transition-colors relative ${
-                  perm.enabled ? 'bg-blue-500' : 'bg-white/20'
-                }`}
-              >
-                <div
-                  className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-transform ${
-                    perm.enabled ? 'left-4' : 'left-0.5'
-                  }`}
-                />
-              </button>
+              <Toggle value={perm.enabled} onChange={() => toggleEnabled(tool)} />
 
               {/* Confirm toggle */}
-              <button
-                onClick={() => toggleConfirm(tool)}
-                className={`w-8 h-4 rounded-full transition-colors relative ${
-                  perm.requireConfirm ? 'bg-yellow-500' : 'bg-white/20'
-                }`}
-              >
-                <div
-                  className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-transform ${
-                    perm.requireConfirm ? 'left-4' : 'left-0.5'
-                  }`}
-                />
-              </button>
+              <Toggle value={perm.requireConfirm} onChange={() => toggleConfirm(tool)} color="yellow" />
 
               {/* Daily limit */}
               <input

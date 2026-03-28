@@ -19,6 +19,16 @@ interface ProviderInfo {
   defaultBaseUrl?: string
 }
 
+const PROVIDER_EMOJIS: Record<AIProviderType, string> = {
+  claude: '\u2728',
+  openai: '\uD83D\uDFE2',
+  deepseek: '\uD83C\uDF0A',
+  ollama: '\uD83E\uDD99',
+  vllm: '\u26A1',
+  qwen: '\uD83C\uDF1F',
+  minimax: '\uD83D\uDD2E',
+}
+
 const PROVIDERS: ProviderInfo[] = [
   { id: 'claude', name: 'Claude (Anthropic)', placeholder: 'sk-ant-...', needsKey: true, needsBaseUrl: false, needsGroupId: false },
   { id: 'openai', name: 'OpenAI', placeholder: 'sk-...', needsKey: true, needsBaseUrl: false, needsGroupId: false },
@@ -108,6 +118,7 @@ export default function Welcome() {
           border: '1px solid var(--border-default)',
         }}
       >
+        <StepDots current={step} steps={STEPS} />
         <AnimatePresence mode="wait">
           {step === 'intro' && (
             <StepContainer key="intro">
@@ -149,7 +160,7 @@ export default function Welcome() {
                         : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
                     }`}
                   >
-                    {p.name}
+                    <span className="mr-2">{PROVIDER_EMOJIS[p.id]}</span>{p.name}
                   </button>
                 ))}
               </div>
@@ -256,7 +267,7 @@ export default function Welcome() {
                     <span className="text-lg">{s.icon}</span>
                     <div className="min-w-0">
                       <div className="text-xs font-medium text-white/85">{s.label}</div>
-                      <div className="text-[10px] text-white/45 truncate">{s.desc}</div>
+                      <div className="text-caption text-white/45 truncate">{s.desc}</div>
                     </div>
                   </div>
                 ))}
@@ -306,6 +317,22 @@ export default function Welcome() {
           )}
         </AnimatePresence>
       </motion.div>
+    </div>
+  )
+}
+
+function StepDots({ current, steps }: { current: string; steps: readonly string[] }) {
+  const idx = steps.indexOf(current)
+  return (
+    <div className="flex justify-center gap-1.5 mb-4">
+      {steps.map((s, i) => (
+        <div
+          key={s}
+          className={`w-1.5 h-1.5 rounded-full transition-colors ${
+            i === idx ? 'bg-blue-400' : i < idx ? 'bg-blue-400/40' : 'bg-white/15'
+          }`}
+        />
+      ))}
     </div>
   )
 }

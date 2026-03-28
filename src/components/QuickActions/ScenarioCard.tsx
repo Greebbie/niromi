@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Toggle from '@/components/ui/Toggle'
 
 interface ScenarioCardProps {
   icon: string
@@ -37,23 +38,11 @@ export default function ScenarioCard({
           onClick={() => children && setExpanded(!expanded)}
         >
           <div className="text-xs font-medium text-white/90 truncate">{title}</div>
-          <div className="text-[10px] text-white/50 truncate">{description}</div>
+          <div className="text-caption text-white/50 truncate">{description}</div>
         </div>
 
         {/* Toggle switch */}
-        <button
-          onClick={onToggle}
-          className="relative w-8 h-4 rounded-full transition-colors shrink-0"
-          style={{
-            background: isActive ? 'rgba(74, 222, 128, 0.6)' : 'var(--bg-toggle-off, rgba(255, 255, 255, 0.15))',
-          }}
-        >
-          <motion.div
-            className="absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm"
-            animate={{ left: isActive ? 16 : 2 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-          />
-        </button>
+        <Toggle value={isActive} onChange={() => onToggle()} color="green" />
       </div>
 
       {/* Expandable config area */}

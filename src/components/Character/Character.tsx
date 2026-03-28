@@ -20,6 +20,7 @@ function clamp(v: number, min: number, max: number) {
 }
 
 export default function Character() {
+  const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   const { animationState, decay } = useCharacterStore()
   const { toggleChat } = useChatStore()
   const hasActiveSkill = useSkillConfigStore((s) => s.hasAnyEnabled())
@@ -201,9 +202,11 @@ export default function Character() {
         ref={animDivRef}
         className="absolute inset-0 flex items-center justify-center"
         style={{
-          animation: `niromi-float ${expr.breathSpeed}s ease-in-out infinite`
-            + (expr.bounce > 0 ? `, niromi-bounce ${expr.breathSpeed * 0.5}s ease-in-out infinite` : '')
-            + (isIdle ? ', niromi-fidget 8s ease-in-out infinite' : ''),
+          animation: prefersReducedMotion
+            ? 'none'
+            : `niromi-float ${expr.breathSpeed}s ease-in-out infinite`
+              + (expr.bounce > 0 ? `, niromi-bounce ${expr.breathSpeed * 0.5}s ease-in-out infinite` : '')
+              + (isIdle ? ', niromi-fidget 8s ease-in-out infinite' : ''),
         }}
       >
         {/* Main character image */}
@@ -219,7 +222,7 @@ export default function Character() {
               objectFit: 'contain',
               transform: `scale(${expr.scale}) rotate(${expr.tilt}deg)`,
               filter: `brightness(${expr.brightness}) drop-shadow(${glowShadow})`,
-              transition: 'transform 0.6s ease, filter 0.6s ease',
+              transition: prefersReducedMotion ? 'none' : 'transform 0.6s ease, filter 0.6s ease',
               imageRendering: 'auto',
             }}
           />
@@ -304,7 +307,7 @@ export default function Character() {
                 fontSize: 10,
                 lineHeight: 1,
                 pointerEvents: 'none',
-                animation: 'niromi-duty-pulse 2s ease-in-out infinite',
+                animation: prefersReducedMotion ? 'none' : 'niromi-duty-pulse 2s ease-in-out infinite',
               }}
             >
               🌙

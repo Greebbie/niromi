@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useMarketplaceStore } from '@/stores/marketplaceStore'
 import { useSkillConfigStore } from '@/stores/skillConfigStore'
 import { useI18n } from '@/i18n/useI18n'
 import { skillRegistry } from '@/core/skills/registry'
 import type { SkillDefinition } from '@/core/skills/registry'
 import type { MarketplaceIndexEntry } from '@/core/skills/marketplace'
+import SkillCreator from './SkillCreator'
 
 type FilterTab = 'installed' | 'all' | 'local' | 'openclaw'
 
@@ -32,6 +33,14 @@ export default function AdminMarketplace() {
   const [installing, setInstalling] = useState<string | null>(null)
   const [confirmHigh, setConfirmHigh] = useState<string | null>(null)
   const [expandedSkill, setExpandedSkill] = useState<string | null>(null)
+  const [showCreator, setShowCreator] = useState(false)
+  const [creatorKey, setCreatorKey] = useState(0)
+
+  const handleSkillCreated = useCallback(() => {
+    setShowCreator(false)
+    // Bump key to force skill list refresh
+    setCreatorKey((k) => k + 1)
+  }, [])
 
   const skillConfigs = useSkillConfigStore((s) => s.configs)
   const setSkillEnabled = useSkillConfigStore((s) => s.setEnabled)
@@ -94,7 +103,8 @@ export default function AdminMarketplace() {
     }
 
     return Array.from(map.values())
-  }, [remoteSkills])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remoteSkills, creatorKey])
 
   // Filter
   const filtered = useMemo(() => {
@@ -203,6 +213,21 @@ export default function AdminMarketplace() {
         ))}
       </div>
 
+      {/* Create Skill toggle + inline creator */}
+      <div>
+        <button
+          onClick={() => setShowCreator(!showCreator)}
+          className="px-3 py-1.5 bg-green-500/10 border border-green-400/20 rounded-lg text-green-300 text-xs hover:bg-green-500/20 transition-colors"
+        >
+          {showCreator ? t('skillCreator.collapse') : t('skillCreator.toggle')}
+        </button>
+        {showCreator && (
+          <div className="mt-2">
+            <SkillCreator onCreated={handleSkillCreated} />
+          </div>
+        )}
+      </div>
+
       {/* Skill list */}
       <div className="space-y-1">
         {filtered.length === 0 && (
@@ -230,9 +255,9 @@ export default function AdminMarketplace() {
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-white text-xs font-medium">{skill.name}</span>
-                    <span className="text-white/30 text-[10px]">v{skill.version}</span>
+                    <span className="text-white/30 text-caption">v{skill.version}</span>
                     {isConfigurable && (
-                      <span className="text-[10px] px-1 rounded bg-purple-500/20 text-purple-300">
+                      <span className="text-caption px-1 rounded bg-purple-500/20 text-purple-300">
                         {t('skill.config.configurable')}
                       </span>
                     )}
@@ -241,15 +266,15 @@ export default function AdminMarketplace() {
                     {skill.description}
                   </div>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-white/20 text-[10px]">{skill.author}</span>
-                    <span className={`text-[10px] px-1 rounded ${
+                    <span className="text-white/20 text-caption">{skill.author}</span>
+                    <span className={`text-caption px-1 rounded ${
                       skill.riskLevel === 'high' ? 'bg-red-500/20 text-red-300' :
                       skill.riskLevel === 'medium' ? 'bg-yellow-500/20 text-yellow-300' :
                       'bg-green-500/20 text-green-300'
                     }`}>
                       {skill.riskLevel}
                     </span>
-                    <span className="text-white/20 text-[10px]">{skill.source}</span>
+                    <span className="text-white/20 text-caption">{skill.source}</span>
                   </div>
                 </div>
                 <div className="flex-shrink-0 flex items-center gap-2">
@@ -270,7 +295,7 @@ export default function AdminMarketplace() {
                   )}
                   {/* Standard install/uninstall buttons */}
                   {!isConfigurable && isBuiltin ? (
-                    <span className="text-white/20 text-[10px] px-2 py-1">
+                    <span className="text-white/20 text-caption px-2 py-1">
                       {t('marketplace.builtin')}
                     </span>
                   ) : !isConfigurable && installed ? (

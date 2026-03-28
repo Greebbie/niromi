@@ -20,7 +20,7 @@ export default function ToolCallBadge({ toolCall, onRetry }: ToolCallBadgeProps)
   const isRunning = toolCall.status === 'running'
 
   return (
-    <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] ${style}`}>
+    <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-caption ${style}`}>
       {isRunning && (
         <span className="w-2 h-2 border border-current border-t-transparent rounded-full animate-spin" />
       )}
@@ -36,6 +36,7 @@ export default function ToolCallBadge({ toolCall, onRetry }: ToolCallBadgeProps)
           onClick={onRetry}
           className="ml-0.5 hover:opacity-100 opacity-70 transition-opacity"
           title={t('tool.retry')}
+          aria-label={t('tool.retry')}
         >
           {'\u21BB'}
         </button>

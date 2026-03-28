@@ -11,6 +11,8 @@ export interface MarketplaceSkillMeta {
   executionMode: 'steps' | 'shell'
   scriptPath?: string
   scriptInterpreter?: 'bash' | 'node' | 'python' | 'powershell'
+  /** Required binaries/tools that must exist on PATH for this skill to work */
+  requires?: string[]
 }
 
 // Remote index entry

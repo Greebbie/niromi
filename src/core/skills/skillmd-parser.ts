@@ -14,7 +14,7 @@ export function parseSkillMd(content: string, files?: string[]): ParsedSkillMd {
   const meta: Partial<SkillDefinition & MarketplaceSkillMeta> = {}
 
   // Extract frontmatter
-  const fmMatch = content.match(/^---\s*\n([\s\S]*?)\n---/)
+  const fmMatch = content.match(/^---\s*\r?\n([\s\S]*?)\r?\n---/)
   if (fmMatch) {
     const lines = fmMatch[1].split('\n')
     for (const line of lines) {
@@ -45,7 +45,7 @@ export function parseSkillMd(content: string, files?: string[]): ParsedSkillMd {
           // tags: tag1, tag2, tag3
           break
         case 'requires':
-          // requires: tool1, tool2
+          meta.requires = val.split(',').map(t => t.trim()).filter(Boolean)
           break
         case 'executionMode':
           if (val === 'steps' || val === 'shell') {
@@ -102,7 +102,7 @@ export function parseSkillMd(content: string, files?: string[]): ParsedSkillMd {
 
   // Extract steps section (lines starting with - after ## Steps)
   const stepsRaw: string[] = []
-  const stepsMatch = content.match(/##\s*Steps\s*\n([\s\S]*?)(?:\n##|\n---|\z)/i)
+  const stepsMatch = content.match(/##\s*Steps\s*\n([\s\S]*?)(?:\n##|\n---|$)/i)
   if (stepsMatch) {
     const stepLines = stepsMatch[1].split('\n')
     for (const line of stepLines) {

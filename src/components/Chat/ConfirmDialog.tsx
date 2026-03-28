@@ -1,5 +1,7 @@
+import { useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useI18n } from '@/i18n/useI18n'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 
 interface ConfirmDialogProps {
   title: string
@@ -29,12 +31,17 @@ export default function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const { t } = useI18n()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(dialogRef, true)
 
   return (
     <motion.div
+      ref={dialogRef}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
+      role="dialog"
+      aria-modal="true"
       className={`rounded-xl border p-3 my-2 ${riskColors[riskLevel]}`}
     >
       <div className="flex items-center gap-2 mb-1">

@@ -1,11 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useConfigStore, type AIProviderType, type AITask, type TaskRouteConfig } from '@/stores/configStore'
+import { useConfigStore, type AIProviderType } from '@/stores/configStore'
 import { testConnection } from '@/core/ai/testConnection'
 import { humanizeError } from '@/core/errors/humanize'
 import { isVisionCapable } from '@/core/ai/createProvider'
+import ModelSelect from '@/components/ui/ModelSelect'
+import Toggle from '@/components/ui/Toggle'
 import { useI18n } from '@/i18n/useI18n'
 import MemoryViewer from './MemoryViewer'
+import STTSetup from './STTSetup'
+import TaskRouting from './TaskRouting'
+import PersonalityTab from './PersonalityTab'
 
 type Tab = 'ai' | 'personality' | 'memory' | 'general'
 
@@ -64,19 +69,18 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
+      role="dialog"
+      aria-modal="true"
       className="w-[360px] max-h-[500px] rounded-2xl overflow-hidden flex flex-col"
       style={{
         background: 'var(--bg-secondary)',
         border: '1px solid var(--border-default)',
       }}
     >
-      {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-white/10">
         <span className="text-white text-sm font-medium">{t('settings.title')}</span>
         <button onClick={onClose} className="text-white/40 hover:text-white/80 text-lg">{'\u00D7'}</button>
       </div>
-
-      {/* Tabs */}
       <div className="flex border-b border-white/10">
         {(['ai', 'personality', 'memory', 'general'] as Tab[]).map((tabId) => (
           <button
@@ -90,8 +94,6 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
           </button>
         ))}
       </div>
-
-      {/* Content */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         <AnimatePresence mode="wait">
           {tab === 'ai' && (
@@ -125,7 +127,6 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
                   />
                 </>
               )}
-
               {currentProvider?.needsBaseUrl && (
                 <>
                   <Label>{t('settings.ai.baseUrl')}</Label>
@@ -137,7 +138,6 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
                   />
                 </>
               )}
-
               {currentProvider?.needsGroupId && (
                 <>
                   <Label>{t('settings.ai.groupId')}</Label>
@@ -149,15 +149,12 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
                   />
                 </>
               )}
-
               <Label>{t('settings.ai.model')}</Label>
-              <input
+              <ModelSelect
+                provider={config.provider}
                 value={config.model}
-                onChange={(e) => config.setModel(e.target.value)}
-                className="nr-input"
-                placeholder="claude-sonnet-4-20250514"
+                onChange={(model) => config.setModel(model)}
               />
-
               <Label>{t('settings.ai.tokenBudget')}</Label>
               <div className="flex gap-1">
                 {(['minimal', 'balanced', 'smart'] as const).map((budget) => (
@@ -175,47 +172,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
                 ))}
               </div>
 
-              {/* Task Routing */}
-              <Label>{t('settings.ai.routing')}</Label>
-              <div className="space-y-1.5">
-                {(['chat', 'vision', 'monitoring'] as AITask[]).map((task) => {
-                  const route = config.modelRouting[task]
-                  const isOverridden = !!route?.provider
-                  return (
-                    <div key={task} className="flex items-center gap-2">
-                      <span className="text-[10px] text-white/50 w-14 shrink-0">{t(`settings.ai.task.${task}`)}</span>
-                      <select
-                        value={route?.provider || ''}
-                        onChange={(e) => {
-                          const val = e.target.value as AIProviderType | ''
-                          if (!val) {
-                            config.setTaskRoute(task, undefined)
-                          } else {
-                            config.setTaskRoute(task, { ...route, provider: val })
-                          }
-                        }}
-                        className="flex-1 bg-white/10 text-white text-[10px] rounded px-1.5 py-1 border border-white/10"
-                      >
-                        <option value="">{t('settings.ai.routing.inherit')}</option>
-                        {PROVIDERS.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </select>
-                      {isOverridden && (
-                        <input
-                          value={route?.apiKey || ''}
-                          onChange={(e) => config.setTaskRoute(task, { ...route, apiKey: e.target.value })}
-                          placeholder="API Key"
-                          type="password"
-                          className="w-20 bg-white/10 text-white text-[10px] rounded px-1.5 py-1 border border-white/10 placeholder:text-white/20"
-                        />
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-
-              {/* Test Connection */}
+              <TaskRouting />
               {testResult && (
                 <p className={`text-xs mt-2 ${testResult.ok ? 'text-green-400/80' : 'text-yellow-400/80'}`}>
                   {testResult.ok ? '\u2705 ' : ''}{testResult.msg}
@@ -233,63 +190,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
 
           {tab === 'personality' && (
             <TabContent key="personality">
-              <Label>{t('settings.personality.userName')}</Label>
-              <input
-                value={config.userName}
-                onChange={(e) => config.setUserName(e.target.value)}
-                className="nr-input"
-                placeholder={t('settings.personality.userNamePlaceholder')}
-              />
-              <div className="flex items-center justify-between mt-2 mb-3">
-                <span className="text-white/60 text-xs">{t('settings.personality.thirdPerson')}</span>
-                <button
-                  onClick={() => config.setThirdPerson(!config.thirdPerson)}
-                  className={`w-10 h-5 rounded-full transition-colors ${
-                    config.thirdPerson ? 'bg-blue-500' : 'bg-white/20'
-                  }`}
-                >
-                  <div
-                    className={`w-4 h-4 rounded-full bg-white transition-transform ${
-                      config.thirdPerson ? 'translate-x-5' : 'translate-x-0.5'
-                    }`}
-                  />
-                </button>
-              </div>
-              <Slider
-                label={t('settings.personality.concise')}
-                value={config.verbosity}
-                onChange={(v) => config.setPersonality('verbosity', v)}
-              />
-              <Slider
-                label={t('settings.personality.formal')}
-                value={config.formality}
-                onChange={(v) => config.setPersonality('formality', v)}
-              />
-              <Slider
-                label={t('settings.personality.cautious')}
-                value={config.proactivity}
-                onChange={(v) => config.setPersonality('proactivity', v)}
-              />
-              <div className="flex flex-wrap gap-1 mt-3">
-                {[
-                  { name: t('settings.personality.default'), v: 0.3, f: 0.7, p: 0.3 },
-                  { name: t('settings.personality.professional'), v: 0.2, f: 0.2, p: 0.2 },
-                  { name: t('settings.personality.lively'), v: 0.8, f: 0.9, p: 0.7 },
-                  { name: t('settings.personality.minimal'), v: 0.1, f: 0.3, p: 0.1 },
-                ].map((preset) => (
-                  <button
-                    key={preset.name}
-                    onClick={() => {
-                      config.setPersonality('verbosity', preset.v)
-                      config.setPersonality('formality', preset.f)
-                      config.setPersonality('proactivity', preset.p)
-                    }}
-                    className="px-3 py-1 rounded-full text-xs bg-white/10 text-white/60 hover:bg-white/20 transition-colors"
-                  >
-                    {preset.name}
-                  </button>
-                ))}
-              </div>
+              <PersonalityTab />
             </TabContent>
           )}
 
@@ -331,22 +232,21 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
                 <Toggle value={config.ttsEnabled} onChange={() => config.setTtsEnabled(!config.ttsEnabled)} />
               </div>
 
-              {/* ── Vision (LLM) ── */}
               <FeatureSection
                 title={lang === 'zh' ? '\u89C6\u89C9\u529F\u80FD / Vision' : 'Vision'}
                 description={lang === 'zh' ? '\u5141\u8BB8 Niromi \u67E5\u770B\u5C4F\u5E55\u5185\u5BB9\uFF08\u9700\u8981\u652F\u6301\u89C6\u89C9\u7684 AI \u6A21\u578B\uFF09' : 'Allow Niromi to see screen content (requires vision-capable AI model)'}
               >
                 {!isVisionCapable() && (
-                  <p className="text-[10px] text-yellow-400/80 mb-1.5">
+                  <p className="text-caption text-yellow-400/80 mb-1.5">
                     {lang === 'zh' ? '\u26A0 \u5F53\u524D\u6A21\u578B\u4E0D\u652F\u6301\u89C6\u89C9' : '\u26A0 Current model does not support vision'}
                   </p>
                 )}
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-white/50">{lang === 'zh' ? '\u542F\u7528\u89C6\u89C9' : 'Enable vision'}</span>
+                  <span className="text-caption text-white/50">{lang === 'zh' ? '\u542F\u7528\u89C6\u89C9' : 'Enable vision'}</span>
                   <Toggle value={config.visionTarget !== 'off'} onChange={() => config.setVisionTarget(config.visionTarget === 'off' ? 'fullscreen' : 'off')} />
                 </div>
                 {config.visionTarget !== 'off' && (
-                  <p className="text-[10px] text-white/30 mt-1">
+                  <p className="text-caption text-white/30 mt-1">
                     {lang === 'zh' ? '\u5F53\u524D\u6A21\u5F0F: ' : 'Current mode: '}
                     <span className={config.visionTarget === 'fullscreen' ? 'text-blue-400' : 'text-green-400'}>
                       {config.visionTarget === 'fullscreen'
@@ -361,12 +261,11 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
                 )}
               </FeatureSection>
 
-              {/* ── STT (Whisper) ── */}
               <FeatureSection
-                title={lang === 'zh' ? '语音输入 (Whisper)' : 'Voice Input (Whisper)'}
-                description={lang === 'zh' ? '下载模型后可用 Alt+M' : 'Download model to enable Alt+M'}
+                title={lang === 'zh' ? '\u8BED\u97F3\u8F93\u5165 (Whisper)' : 'Voice Input (Whisper)'}
+                description={lang === 'zh' ? '\u4E0B\u8F7D\u6A21\u578B\u540E\u53EF\u7528 Alt+M' : 'Download model to enable Alt+M'}
               >
-                <STTSetup lang={lang} />
+                <STTSetup />
               </FeatureSection>
             </TabContent>
           )}
@@ -376,7 +275,6 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
     </motion.div>
   )
 }
-
 function TabContent({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
@@ -389,194 +287,15 @@ function TabContent({ children }: { children: React.ReactNode }) {
     </motion.div>
   )
 }
-
 function Label({ children }: { children: React.ReactNode }) {
   return <p className="text-white/50 text-xs mb-1 mt-2">{children}</p>
 }
-
-function Toggle({ value, onChange }: { value: boolean; onChange: () => void }) {
-  return (
-    <button
-      onClick={onChange}
-      className={`w-10 h-5 rounded-full transition-colors ${value ? 'bg-blue-500' : 'bg-white/20'}`}
-    >
-      <div className={`w-4 h-4 rounded-full bg-white transition-transform ${value ? 'translate-x-5' : 'translate-x-0.5'}`} />
-    </button>
-  )
-}
-
 function FeatureSection({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
     <div className="mt-3 p-2.5 rounded-lg bg-white/5 border border-white/5">
       <p className="text-white/80 text-xs font-medium">{title}</p>
-      <p className="text-white/30 text-[10px] mb-2">{description}</p>
+      <p className="text-white/30 text-caption mb-2">{description}</p>
       {children}
-    </div>
-  )
-}
-
-function StatusDot({ status }: { status: 'ready' | 'loading' | 'error' | 'idle' }) {
-  const colors = { ready: 'bg-green-400', loading: 'bg-yellow-400 animate-pulse', error: 'bg-red-400', idle: 'bg-white/20' }
-  return <span className={`inline-block w-1.5 h-1.5 rounded-full ${colors[status]}`} />
-}
-
-function STTSetup({ lang }: { lang: string }) {
-  const config = useConfigStore()
-  const [status, setStatus] = useState<'checking' | 'not-downloaded' | 'downloading' | 'ready' | 'error'>('checking')
-  const [progress, setProgress] = useState<number | null>(null)
-  const [errorMsg, setErrorMsg] = useState('')
-
-  useEffect(() => {
-    let cancelled = false
-    window.electronAPI?.sttStatus().then((s) => {
-      if (!cancelled) setStatus(s.initialized ? 'ready' : 'not-downloaded')
-    }).catch(() => {
-      if (!cancelled) setStatus('not-downloaded')
-    })
-    return () => { cancelled = true }
-  }, [])
-
-  const handleDownload = async () => {
-    const api = window.electronAPI
-    if (!api) return
-    setStatus('downloading')
-    setProgress(0)
-    setErrorMsg('')
-
-    api.onSttProgress((p) => {
-      if (p.progress != null) setProgress(Math.round(p.progress))
-    })
-
-    try {
-      const result = await api.sttInit(config.sttModel)
-      if (!result.success) {
-        setStatus('error')
-        setErrorMsg(result.error || '')
-      } else {
-        setStatus('ready')
-      }
-    } catch (err) {
-      setStatus('error')
-      setErrorMsg(err instanceof Error ? err.message : String(err))
-    } finally {
-      setProgress(null)
-      api.offSttProgress()
-    }
-  }
-
-  const handleModelChange = async (newModel: string) => {
-    config.setSttModel(newModel)
-    // Changed model requires re-download
-    if (status === 'ready') {
-      setStatus('not-downloaded')
-    }
-  }
-
-  const dotStatus = status === 'ready' ? 'ready' as const
-    : status === 'downloading' ? 'loading' as const
-    : status === 'error' ? 'error' as const
-    : 'idle' as const
-
-  const modelSizes: Record<string, string> = {
-    'Xenova/whisper-tiny': '~75MB',
-    'Xenova/whisper-base': '~150MB',
-    'Xenova/whisper-small': '~500MB',
-  }
-
-  const statusText: Record<string, string> = {
-    checking: lang === 'zh' ? '检查中...' : 'Checking...',
-    'not-downloaded': lang === 'zh' ? '未下载' : 'Not downloaded',
-    downloading: progress != null ? `${progress}%` : (lang === 'zh' ? '下载中...' : 'Downloading...'),
-    ready: lang === 'zh' ? '已就绪' : 'Ready',
-    error: lang === 'zh' ? '下载失败' : 'Download failed',
-  }
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-1.5">
-        <StatusDot status={dotStatus} />
-        <span className="text-[10px] text-white/50">{statusText[status]}</span>
-      </div>
-
-      {/* Progress bar */}
-      {status === 'downloading' && progress != null && (
-        <div className="w-full h-1 rounded-full bg-white/10 overflow-hidden">
-          <div className="h-full bg-blue-400 transition-all duration-300" style={{ width: `${progress}%` }} />
-        </div>
-      )}
-
-      {/* Model selector */}
-      <div className="text-[10px] text-white/40 mb-0.5">{lang === 'zh' ? '模型' : 'Model'}</div>
-      <select
-        value={config.sttModel}
-        onChange={(e) => handleModelChange(e.target.value)}
-        disabled={status === 'downloading'}
-        className="nr-select"
-      >
-        <option value="Xenova/whisper-tiny">Tiny (~75MB, {lang === 'zh' ? '快' : 'fast'})</option>
-        <option value="Xenova/whisper-base">Base (~150MB, {lang === 'zh' ? '更准' : 'accurate'})</option>
-        <option value="Xenova/whisper-small">Small (~500MB, {lang === 'zh' ? '最准' : 'best'})</option>
-      </select>
-
-      {/* Language selector — always visible */}
-      <div className="text-[10px] text-white/40 mb-0.5">{lang === 'zh' ? '识别语言' : 'Language'}</div>
-      <select
-        value={config.sttLanguage}
-        onChange={(e) => config.setSttLanguage(e.target.value as 'auto' | 'zh' | 'en')}
-        className="nr-select"
-      >
-        <option value="auto">{lang === 'zh' ? '自动' : 'Auto'}</option>
-        <option value="zh">中文</option>
-        <option value="en">English</option>
-      </select>
-
-      {/* Download button */}
-      {(status === 'not-downloaded' || status === 'error') && (
-        <button
-          onClick={handleDownload}
-          className="btn-primary w-full"
-        >
-          {lang === 'zh'
-            ? `下载模型 (${modelSizes[config.sttModel] || '~75MB'})`
-            : `Download (${modelSizes[config.sttModel] || '~75MB'})`}
-        </button>
-      )}
-
-      {status === 'error' && errorMsg && (
-        <p className="text-[10px] text-red-400/80">{errorMsg.slice(0, 100)}</p>
-      )}
-
-      {/* Hint when ready */}
-      {status === 'ready' && (
-        <p className="text-[10px] text-green-400/60">{lang === 'zh' ? '按 Alt+M 或点麦克风图标开始说话' : 'Press Alt+M or click mic to speak'}</p>
-      )}
-    </div>
-  )
-}
-
-function Slider({
-  label,
-  value,
-  onChange,
-}: {
-  label: string
-  value: number
-  onChange: (v: number) => void
-}) {
-  return (
-    <div className="mb-2">
-      <div className="flex justify-between mb-1">
-        <span className="text-white/60 text-xs">{label}</span>
-        <span className="text-white/30 text-xs">{Math.round(value * 100)}%</span>
-      </div>
-      <input
-        type="range"
-        min={0}
-        max={100}
-        value={Math.round(value * 100)}
-        onChange={(e) => onChange(parseInt(e.target.value) / 100)}
-        className="w-full h-1 rounded-full appearance-none bg-white/30 hover:bg-white/40 accent-blue-400 transition-colors"
-      />
     </div>
   )
 }

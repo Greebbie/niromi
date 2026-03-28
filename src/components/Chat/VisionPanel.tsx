@@ -66,6 +66,7 @@ const VisionPanel = forwardRef<HTMLDivElement, VisionPanelProps>(
             onClick={fetchWindows}
             className="text-white/30 hover:text-white/60 text-xs transition-colors"
             title={lang === 'zh' ? '\u5237\u65B0' : 'Refresh'}
+            aria-label={lang === 'zh' ? '\u5237\u65B0' : 'Refresh'}
             disabled={loading}
           >
             {'\u21BB'}
@@ -73,7 +74,7 @@ const VisionPanel = forwardRef<HTMLDivElement, VisionPanelProps>(
         </div>
 
         {!visionCapable && (
-          <div className="px-2.5 py-1.5 text-[10px] text-yellow-400/80 bg-yellow-400/5">
+          <div className="px-2.5 py-1.5 text-caption text-yellow-400/80 bg-yellow-400/5">
             {lang === 'zh' ? '\u5F53\u524D\u6A21\u578B\u4E0D\u652F\u6301\u89C6\u89C9' : 'Current model does not support vision'}
           </div>
         )}
@@ -111,12 +112,12 @@ const VisionPanel = forwardRef<HTMLDivElement, VisionPanelProps>(
           {(isWindowMode || visionTarget === 'fullscreen') && (
             <div className="ml-4 mt-0.5 max-h-28 overflow-y-auto space-y-0.5">
               {loading && (
-                <p className="text-[10px] text-white/30 px-1.5">
+                <p className="text-caption text-white/30 px-1.5">
                   {lang === 'zh' ? '\u52A0\u8F7D\u4E2D...' : 'Loading...'}
                 </p>
               )}
               {!loading && windowList.length === 0 && (
-                <p className="text-[10px] text-white/30 px-1.5">
+                <p className="text-caption text-white/30 px-1.5">
                   {lang === 'zh' ? '\u672A\u627E\u5230\u7A97\u53E3' : 'No windows found'}
                 </p>
               )}
@@ -124,7 +125,7 @@ const VisionPanel = forwardRef<HTMLDivElement, VisionPanelProps>(
                 <button
                   key={w.id}
                   onClick={() => handleSelect(w.name)}
-                  className={`w-full text-left px-1.5 py-0.5 rounded text-[10px] transition-colors truncate ${
+                  className={`w-full text-left px-1.5 py-0.5 rounded text-caption transition-colors truncate ${
                     visionTarget === w.name
                       ? 'bg-green-500/20 text-green-300'
                       : 'text-white/50 hover:bg-white/10 hover:text-white/70'

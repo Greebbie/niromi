@@ -26,13 +26,21 @@ function ToastItem({ toast }: { toast: Toast }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -8, scale: 0.9 }}
       transition={{ duration: 0.2 }}
-      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] border backdrop-blur-sm select-none ${TYPE_STYLES[toast.type]}`}
+      role="alert"
+      className={`pointer-events-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] border backdrop-blur-sm select-none ${TYPE_STYLES[toast.type]}`}
       style={{
         background: 'var(--bg-primary)',
       }}
     >
       <span className="text-sm leading-none">{toast.icon}</span>
       <span className="truncate max-w-[180px]">{toast.message}</span>
+      <button
+        onClick={() => removeToast(toast.id)}
+        className="ml-1 opacity-50 hover:opacity-100 transition-opacity text-xs leading-none"
+        aria-label="Dismiss"
+      >
+        {'\u00D7'}
+      </button>
     </motion.div>
   )
 }
@@ -41,7 +49,7 @@ export default function ActionToast() {
   const toasts = useFeedbackStore((s) => s.toasts)
 
   return (
-    <div className="flex flex-col items-center gap-1 pointer-events-none">
+    <div className="flex flex-col items-center gap-1 pointer-events-none" aria-live="assertive">
       <AnimatePresence mode="popLayout">
         {toasts.map((toast) => (
           <ToastItem key={toast.id} toast={toast} />

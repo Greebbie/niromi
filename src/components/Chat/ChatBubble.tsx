@@ -7,6 +7,7 @@ import { useI18n } from '@/i18n/useI18n'
 import MessageList from './MessageList'
 import InputBar from './InputBar'
 import CostBadge from './CostBadge'
+import CostFooter from './CostFooter'
 import ConfirmDialog from './ConfirmDialog'
 import { createPortal } from 'react-dom'
 import VisionPanel from './VisionPanel'
@@ -78,6 +79,7 @@ export default function ChatBubble({ onOpenSettings, onOpenAdmin }: ChatBubblePr
                   onClick={() => setShowVisionPanel(!showVisionPanel)}
                   className={`w-6 h-6 rounded-full hover:bg-white/10 flex items-center justify-center text-xs transition-colors ${eyeColor}`}
                   title={visionEnabled ? t('bubble.vision.off') : t('bubble.vision.on')}
+                  aria-label={visionEnabled ? t('bubble.vision.off') : t('bubble.vision.on')}
                 >
                   {'\uD83D\uDC41'}
                 </button>
@@ -85,6 +87,7 @@ export default function ChatBubble({ onOpenSettings, onOpenAdmin }: ChatBubblePr
                   onClick={onOpenAdmin}
                   className="w-6 h-6 rounded-full hover:bg-white/10 text-white/40 hover:text-white/70 flex items-center justify-center text-xs transition-colors"
                   title={t('bubble.admin')}
+                  aria-label={t('bubble.admin')}
                 >
                   {'\u2630'}
                 </button>
@@ -92,6 +95,7 @@ export default function ChatBubble({ onOpenSettings, onOpenAdmin }: ChatBubblePr
                   onClick={onOpenSettings}
                   className="w-6 h-6 rounded-full hover:bg-white/10 text-white/40 hover:text-white/70 flex items-center justify-center text-xs transition-colors"
                   title={t('bubble.settings')}
+                  aria-label={t('bubble.settings')}
                 >
                   {'\u2699'}
                 </button>
@@ -99,6 +103,7 @@ export default function ChatBubble({ onOpenSettings, onOpenAdmin }: ChatBubblePr
                   onClick={closeChat}
                   className="w-6 h-6 rounded-full hover:bg-white/10 text-white/40 hover:text-white/70 flex items-center justify-center text-xs transition-colors"
                   title={t('bubble.close')}
+                  aria-label={t('bubble.close')}
                 >
                   {'\u00D7'}
                 </button>
@@ -106,6 +111,8 @@ export default function ChatBubble({ onOpenSettings, onOpenAdmin }: ChatBubblePr
             </div>
 
             <MessageList onOpenAdmin={onOpenAdmin} />
+
+            <CostFooter />
 
             {/* Confirm dialog */}
             {pendingConfirm && (
